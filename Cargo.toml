@@ -1,0 +1,9 @@
+[workspace]
+resolver = "2"
+members = [
+  "godot-test",
+  "godot-test_defs",
+  "godot-test_macros",
+
+  "tests/rust"
+]

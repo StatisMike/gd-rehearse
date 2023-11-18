@@ -1,0 +1,13 @@
+[configuration]
+entry_symbol = "tests_init"
+compatibility_minimum = 4.1
+
+[libraries]
+linux.debug.x86_64 = "res://../../target/debug/libtests.so"
+linux.release.x86_64 = "res://../../target/release/libtests.so"
+windows.debug.x86_64 = "res://../../target/debug/tests.dll"
+windows.release.x86_64 = "res://../../target/release/tests.dll"
+macos.debug = "res://../../target/debug/libtests.dylib"
+macos.release = "res://../../target/release/libtests.dylib"
+macos.debug.arm64 = "res://../../target/debug/libtests.dylib"
+macos.release.arm64 = "res://../../target/release/libtests.dylib"
