@@ -11,3 +11,4 @@ categories = ["game-engines", "graphics", "test"]
 
 [dependencies]
 godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
+paste = "1.0.14"

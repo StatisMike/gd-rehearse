@@ -5,6 +5,7 @@ use venial::Declaration;
 
 mod bench;
 mod itest;
+pub(crate) mod parser;
 mod utils;
 
 /// Similar to `#[test]`, but runs an integration test with Godot.

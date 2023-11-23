@@ -1,15 +1,18 @@
-use proc_macro2::{TokenStream, TokenTree};
-use quote::quote;
-use venial::{AttributeValue, Declaration, Error, Function};
+use proc_macro2::TokenStream;
+use quote::{quote, ToTokens};
+use venial::{Declaration, Error, FnParam, Function};
 
-use crate::utils::bail;
+use crate::{
+    parser::{AttributeIdent, AttributeValueParser},
+    utils::bail,
+};
 
 const DEFAULT_REPETITIONS: usize = 100;
 
 pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::Error> {
     let func = match input_decl {
         Declaration::Function(f) => f,
-        _ => return bail!(&input_decl, "#[bench] can only be applied to functions"),
+        _ => return bail!(&input_decl, "#[gdbench] can only be applied to functions"),
     };
 
     // Note: allow attributes for things like #[rustfmt] or #[clippy]
@@ -19,94 +22,106 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
 
     // Ignore -> (), as no one does that by accident.
     // We need `ret` to make sure the type is correct and to avoid unused imports (by IDEs).
-    let Some(ret) = func.return_ty else {
+    let Some(ret) = &func.return_ty else {
         return bail!(
             func,
-            "#[bench] function must return a value from its computation, to prevent optimizing the operation away"
+            "#[gdbench] function must return a value from its computation, to prevent optimizing the operation away"
         );
     };
 
     let mut repeats = DEFAULT_REPETITIONS;
+    let mut focused = false;
+    let mut skipped = false;
+    let mut keyword = quote! { None };
 
-    for attr in &mut func.attributes.clone() {
-        if attr.path.len() == 1 && attr.path[0].to_string() == "gdbench" {
-            if let AttributeValue::Group(_, tokens) = &mut attr.value {
-                if !tokens.is_empty() {
-                    tokens.reverse();
+    let mut parser =
+        AttributeValueParser::from_attribute_group_at_path(&func.attributes, "gdbench")?;
 
-                    let Some(ident) = tokens.pop() else {
-                        return Err(venial::Error::new_at_tokens(
-                            &attr.value,
-                            "expected 'repeat' identifier",
-                        ));
-                    };
-                    let _ident = match ident {
-                        TokenTree::Ident(ident) if ident == "repeat" => ident,
-                        _ => {
-                            return Err(venial::Error::new_at_tokens(
-                                &attr.value,
-                                "expected 'repeat' identifier",
-                            ))
-                        }
-                    };
-
-                    let Some(sign) = tokens.pop() else {
-                        return Err(venial::Error::new_at_tokens(
-                            &attr.value,
-                            "expected 'repeat' identifier",
-                        ));
-                    };
-                    let _sign = match sign {
-                        TokenTree::Punct(punct) if punct.to_string() == "=" => punct,
-                        _ => {
-                            return Err(venial::Error::new_at_tokens(
-                                &attr.value,
-                                "expected equal sign",
-                            ))
-                        }
-                    };
-
-                    let reps = tokens.pop().ok_or_else(|| {
-                        venial::Error::new_at_tokens(&attr.value, "expected int literal")
-                    })?;
-                    let reps = match reps {
-                        TokenTree::Literal(reps) => reps,
-                        _ => {
-                            return Err(venial::Error::new_at_tokens(
-                                &attr.value,
-                                "expected int literal",
-                            ))
-                        }
-                    };
-
-                    repeats = reps.to_string().parse().map_err(|_| {
-                        venial::Error::new_at_tokens(&attr.value, "expected int literal")
-                    })?;
-                }
+    while let Some(ident) = parser.get_one_of_idents(&[
+        AttributeIdent::Focus,
+        AttributeIdent::Skip,
+        AttributeIdent::Repeat,
+        AttributeIdent::Keyword,
+    ])? {
+        match ident {
+            AttributeIdent::Repeat => {
+                parser.pop_equal_sign()?;
+                let repeats_lit = parser.get_literal()?;
+                repeats = repeats_lit
+                    .to_string()
+                    .parse::<usize>()
+                    .map_err(|_| venial::Error::new("expected integer"))?;
+                parser.progress_puct();
+            }
+            AttributeIdent::Focus => {
+                focused = true;
+                parser.progress_puct()
+            }
+            AttributeIdent::Skip => {
+                skipped = true;
+                parser.progress_puct()
+            }
+            AttributeIdent::Keyword => {
+                parser.pop_equal_sign()?;
+                let keyword_lit = parser.get_literal()?;
+                keyword = quote! { Some( #keyword_lit ) };
+                parser.progress_puct();
             }
         }
+    }
+
+    if skipped && focused {
+        return bail!(
+            &func.name,
+            "#[gditest]: keys `skip` and `focus` are mutually exclusive",
+        );
     }
 
     let bench_name = &func.name;
     let bench_name_str = func.name.to_string();
 
+    // Detect parameter name chosen by user, or unused fallback
+    let param = if let Some((param, _punct)) = func.params.first() {
+        if let FnParam::Typed(param) = param {
+            // Correct parameter type (crude macro check) -> reuse parameter name
+            let is_context = param
+                .ty
+                .tokens
+                .last()
+                .map(|last| last.to_string() == "TestContext")
+                .unwrap_or(false);
+            if is_context {
+                param.to_token_stream()
+            } else {
+                return bad_signature(&func);
+            }
+        } else {
+            return bad_signature(&func);
+        }
+    } else {
+        quote! { __unused_context: &::godot_test::CaseContext }
+    };
+
     let body = &func.body;
 
     Ok(quote! {
-        pub fn #bench_name() {
+        pub fn #bench_name(#param) {
             for _ in 0..#repeats {
                 let __ret: #ret = #body;
                 ::godot_test::bench::bench_used(__ret);
             }
         }
 
-        ::godot_test::bench::register_benchmark(::godot_test::bench::RustBenchmark {
+        ::godot::sys::plugin_add!{GODOT_TEST_RUST_BENCHMARKS; ::godot_test::bench::RustBenchmark {
           name: #bench_name_str,
+          focused: #focused,
+          skipped: #skipped,
+          keyword: #keyword,
           file: std::file!(),
           line: std::line!(),
           function: #bench_name,
           repetitions: #repeats,
-        })
+        }}
     })
 }
 

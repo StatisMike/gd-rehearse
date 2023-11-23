@@ -1,26 +1,20 @@
-use std::{
-    collections::HashSet,
-    time::{Duration, Instant},
-};
+use std::collections::HashSet;
+use std::time::Duration;
 
-use crate::classes::RustBenchmark;
+use crate::cases::rust_bench::RustBenchmark;
+use crate::cases::{Case, CaseOutcome};
+use crate::runner::config::RunnerConfig;
 
 const WARMUP_RUNS: usize = 200;
 const TEST_RUNS: usize = 501; // uneven, so median need not be interpolated.
 const METRIC_COUNT: usize = 2;
 
-static RUST_BENCHMARKS: std::sync::Mutex<Vec<RustBenchmark>> = std::sync::Mutex::new(Vec::new());
-
-pub fn register_benchmark(case: RustBenchmark) {
-    RUST_BENCHMARKS
-        .lock()
-        .expect("can't add RustBenchmark")
-        .push(case);
-}
+godot::sys::plugin_registry!(pub GODOT_TEST_RUST_BENCHMARKS: RustBenchmark);
 
 pub struct GdBenchmarks {
     benches: Vec<RustBenchmark>,
     files_count: usize,
+    is_focus_run: bool,
 }
 
 impl GdBenchmarks {
@@ -32,14 +26,23 @@ impl GdBenchmarks {
         self.files_count
     }
 
-    pub fn init() -> Self {
+    pub(crate) fn init(config: &RunnerConfig) -> Self {
         let mut instance = Self {
             benches: Vec::new(),
             files_count: 0,
+            is_focus_run: false,
         };
 
-        instance.collect_rust_benchmarks();
+        instance.collect_rust_benchmarks(config);
         instance
+    }
+
+    pub fn get_post_init_summary(&self) -> String {
+        format!(
+            "   Found {} Rust benchmarks in {} files",
+            self.bench_count(),
+            self.files_count()
+        )
     }
 
     pub fn get_benchmark(&mut self) -> Option<RustBenchmark> {
@@ -47,54 +50,63 @@ impl GdBenchmarks {
     }
 
     fn get_benchmark_from_registry() -> Option<RustBenchmark> {
-        RUST_BENCHMARKS
+        __godot_rust_plugin_GODOT_TEST_RUST_BENCHMARKS
             .lock()
             .expect("couldn't retrieve RustBenchmark")
             .pop()
     }
 
-    fn collect_rust_benchmarks(&mut self) {
+    fn collect_rust_benchmarks(&mut self, config: &RunnerConfig) {
         let mut all_files = HashSet::new();
 
         while let Some(bench) = Self::get_benchmark_from_registry() {
-            self.benches.push(bench);
-            all_files.insert(bench.file);
+            // Collect only benches based on keyword. If keyword in runner is empty, all will pass this check
+            if bench.should_run_keyword(config.keyword()) {
+                if !self.is_focus_run && bench.is_case_focus() && !config.disallow_focus() {
+                    self.benches.clear();
+                    all_files.clear();
+                    self.is_focus_run = true;
+                }
+
+                if !self.is_focus_run || bench.should_run_focus(config.disallow_focus()) {
+                    all_files.insert(bench.file);
+                    self.benches.push(bench);
+                }
+            }
         }
 
         // Sort alphabetically for deterministic run order
-        self.benches.sort_by_key(|bench| bench.file);
+        self.benches
+            .sort_by_key(|bench| format!("{}{}", bench.file, bench.name));
         self.files_count = all_files.len();
     }
 }
 
-pub struct BenchResult {
+pub(crate) struct BenchResult {
+    pub outcome: CaseOutcome,
     pub stats: [Duration; METRIC_COUNT],
 }
 
 impl BenchResult {
+    pub fn skipped() -> Self {
+        Self {
+            outcome: CaseOutcome::Skipped,
+            stats: [Duration::ZERO, Duration::ZERO],
+        }
+    }
+
+    pub fn failed() -> Self {
+        Self {
+            outcome: CaseOutcome::Failed,
+            stats: [Duration::ZERO, Duration::ZERO],
+        }
+    }
+
     pub fn metrics() -> [&'static str; METRIC_COUNT] {
         ["min", "median"]
     }
 
-    pub fn run_benchmark(code: fn(), inner_repetitions: usize) -> BenchResult {
-        for _ in 0..WARMUP_RUNS {
-            code();
-        }
-
-        let mut times = Vec::with_capacity(TEST_RUNS);
-        for _ in 0..TEST_RUNS {
-            let start = Instant::now();
-            code();
-            let duration = start.elapsed();
-
-            times.push(duration / inner_repetitions as u32);
-        }
-        times.sort();
-
-        Self::calculate_stats(times)
-    }
-
-    fn calculate_stats(times: Vec<Duration>) -> BenchResult {
+    pub fn success(times: Vec<Duration>) -> BenchResult {
         // See top of file for rationale.
 
         /*let mean = {
@@ -118,6 +130,7 @@ impl BenchResult {
         let median = times[TEST_RUNS / 2];
 
         BenchResult {
+            outcome: CaseOutcome::Passed,
             stats: [min, median],
         }
     }

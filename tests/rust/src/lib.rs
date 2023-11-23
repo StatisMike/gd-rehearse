@@ -1,8 +1,6 @@
 use godot::init::{gdextension, ExtensionLibrary};
 
 mod itest;
-#[cfg(test)]
-mod tests;
 
 struct GodotTestTests;
 

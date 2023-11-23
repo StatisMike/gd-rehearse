@@ -2,7 +2,10 @@ use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use venial::{Declaration, Error, FnParam, Function};
 
-use crate::utils::bail;
+use crate::{
+    parser::{AttributeIdent, AttributeValueParser},
+    utils::bail,
+};
 
 pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> {
     let func = match input_decl {
@@ -21,22 +24,32 @@ pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> 
 
     let mut skipped = false;
     let mut focused = false;
+    let mut keyword = quote! { None };
 
-    for attr in func.attributes.iter() {
-        if attr.path.len() == 1 && attr.path[0].to_string() == "gditest" {
-            if let venial::AttributeValue::Group(_span, tokens) = &attr.value {
-                for token in tokens {
-                    if let proc_macro2::TokenTree::Ident(ident) = token {
-                        let stringified = ident.to_string();
-                        if stringified == "skip" {
-                            skipped = true;
-                        }
-                        if stringified == "focus" {
-                            focused = true;
-                        }
-                    }
-                }
+    let mut parser =
+        AttributeValueParser::from_attribute_group_at_path(&func.attributes, "gditest")?;
+
+    while let Some(ident) = parser.get_one_of_idents(&[
+        AttributeIdent::Focus,
+        AttributeIdent::Skip,
+        AttributeIdent::Keyword,
+    ])? {
+        match ident {
+            AttributeIdent::Focus => {
+                focused = true;
+                parser.progress_puct();
             }
+            AttributeIdent::Skip => {
+                skipped = true;
+                parser.progress_puct();
+            }
+            AttributeIdent::Keyword => {
+                parser.pop_equal_sign()?;
+                let keyword_literal = parser.get_literal()?;
+                keyword = quote! { Some(#keyword_literal) };
+                parser.progress_puct();
+            }
+            _ => unreachable!(),
         }
     }
 
@@ -69,7 +82,7 @@ pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> 
             return bad_signature(&func);
         }
     } else {
-        quote! { __unused_context: &::godot_test::itest::TestContext }
+        quote! { __unused_context: &::godot_test::CaseContext }
     };
 
     let body = &func.body;
@@ -79,14 +92,24 @@ pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> 
             #body
         }
 
-        ::godot_test::itest::register_rust_case(::godot_test::itest::RustTestCase {
+        ::godot::sys::plugin_add!(GODOT_TEST_RUST_TEST_CASES; ::godot_test::itest::RustTestCase {
             name: #test_name_str,
             skipped: #skipped,
             focused: #focused,
+            keyword: #keyword,
             file: std::file!(),
             line: std::line!(),
             function: #test_name,
         });
+
+        // ::godot_test::rust_test_case_add!(::godot_test::itest::RustTestCase {
+        //     name: #test_name_str,
+        //     skipped: #skipped,
+        //     focused: #focused,
+        //     file: std::file!(),
+        //     line: std::line!(),
+        //     function: #test_name,
+        // });
     })
 }
 

@@ -1,5 +1,3 @@
 [gd_scene format=3 uid="uid://dag477ig1al1u"]
 
-[node name="test" type="Node3D"]
-
-[node name="GdTestRunner" type="GdTestRunner" parent="."]
+[node name="GdTestRunner" type="GdTestRunner"]
