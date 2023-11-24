@@ -32,6 +32,7 @@ pub(crate) struct CliConfig {
     disallow_skip: bool,
     allow_skip: bool,
     mute_keyword: bool,
+    ignore_keywords: bool,
     mute_filters: bool,
     run_rust_tests: bool,
     run_rust_benchmarks: bool,
@@ -47,6 +48,7 @@ impl CliConfig {
     pub const CMD_USER_DISALLOW_SKIP: &'static str = "--disallow-strip";
     pub const CMD_USER_ALLOW_SKIP: &'static str = "--allow-strip";
     pub const CMD_USER_MUTE_KEYWORD: &'static str = "--mute-keyword";
+    pub const CMD_USER_IGNORE_KEYWORDS: &'static str = "--ignore-keywords";
     pub const CMD_USER_MUTE_FILTERS: &'static str = "--mute-filters";
     pub const CMD_USER_KEYWORD: &'static str = "--keyword";
     pub const CMD_USER_FILTERS: &'static str = "--filters";
@@ -79,6 +81,7 @@ impl CliConfig {
         )?;
 
         let mute_keyword = Self::get_arg(&mut args_vec, Self::CMD_USER_MUTE_KEYWORD);
+        let ignore_keywords = Self::get_arg(&mut args_vec, Self::CMD_USER_IGNORE_KEYWORDS);
 
         let keyword_arg = Self::get_arg_with_value(&mut args_vec, Self::CMD_USER_KEYWORD);
         let keyword = if keyword_arg.is_empty() {
@@ -116,6 +119,7 @@ impl CliConfig {
             disallow_skip,
             allow_skip,
             mute_keyword,
+            ignore_keywords,
             mute_filters,
             run_rust_tests,
             run_rust_benchmarks,
@@ -188,6 +192,7 @@ pub(crate) struct RunnerConfig {
     run_rust_tests: bool,
     run_rust_benchmarks: bool,
     keyword: String,
+    ignore_keywords: bool,
     filters: Vec<String>,
 }
 
@@ -202,6 +207,10 @@ impl RunnerConfig {
 
     pub fn keyword(&self) -> &str {
         &self.keyword
+    }
+
+    pub fn ignore_keywords(&self) -> bool {
+        self.ignore_keywords
     }
 
     pub fn filters(&self) -> &Vec<String> {
@@ -222,6 +231,7 @@ impl RunnerConfig {
         run_rust_tests: bool,
         run_rust_benchmarks: bool,
         keyword: &GString,
+        ignore_keywords: bool,
         filters: &PackedStringArray,
     ) -> Result<Self, ConfigError> {
         let keyword = keyword.to_string();
@@ -236,6 +246,7 @@ impl RunnerConfig {
             disallow_skip,
             run_rust_tests,
             run_rust_benchmarks,
+            ignore_keywords,
             keyword,
             filters,
         };
@@ -271,6 +282,9 @@ impl RunnerConfig {
         if cmdline.mute_keyword {
             instance.keyword = String::new()
         };
+        if cmdline.ignore_keywords {
+            instance.ignore_keywords = true;
+        }
         if !cmdline.keyword.is_empty() {
             instance.keyword = cmdline.keyword.clone()
         };

@@ -66,7 +66,7 @@ impl GdRustItests {
 
         while let Some(test) = Self::get_rust_case() {
             // Collect only tests based on keyword. If keyword in runner is empty, all will pass this check
-            if test.should_run_keyword(config.keyword()) {
+            if test.should_run_keyword(config.keyword(), config.ignore_keywords()) {
                 if !self.is_focus_run && test.is_case_focus() && !config.disallow_focus() {
                     self.tests.clear();
                     all_files.clear();

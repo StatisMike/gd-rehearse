@@ -61,7 +61,7 @@ impl GdBenchmarks {
 
         while let Some(bench) = Self::get_benchmark_from_registry() {
             // Collect only benches based on keyword. If keyword in runner is empty, all will pass this check
-            if bench.should_run_keyword(config.keyword()) {
+            if bench.should_run_keyword(config.keyword(), config.ignore_keywords()) {
                 if !self.is_focus_run && bench.is_case_focus() && !config.disallow_focus() {
                     self.benches.clear();
                     all_files.clear();

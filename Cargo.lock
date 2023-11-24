@@ -108,6 +108,9 @@ dependencies = [
 name = "godot-test_macros"
 version = "0.1.0"
 dependencies = [
+ "godot",
+ "godot-test",
+ "godot-test_defs",
  "proc-macro2",
  "quote",
  "venial",

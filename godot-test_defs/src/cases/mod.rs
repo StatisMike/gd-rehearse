@@ -11,7 +11,9 @@ pub mod rust_test_case;
 use godot::engine::{Engine, Node};
 use godot::obj::Gd;
 
-/// Test context for [RustTestCase] and [RustBenchmark].
+/// Optional test context for `#[gditest]` and `#[gdbench]` annotated functions.
+/// 
+/// Currently it allows only to access [GdTestRunner](crate::runner::GdTestRunner) scene tree during tests and benchmarking.
 pub struct CaseContext {
     pub scene_tree: Gd<Node>,
 }
@@ -70,8 +72,8 @@ pub(crate) trait Case {
         !self.is_case_skip() || disallow_skip
     }
 
-    fn should_run_keyword(&self, keyword: &str) -> bool {
-        if keyword.is_empty() {
+    fn should_run_keyword(&self, keyword: &str, ignore_keywords: bool) -> bool {
+        if ignore_keywords {
             return true;
         };
         if let Some(case_keyword) = self.get_case_keyword() {

@@ -6,6 +6,9 @@
 
 use super::{Case, CaseContext};
 
+/// Rust test case.
+///
+/// Created by using `#[gdbench]` macro and registered to run by test runner.
 #[derive(Copy, Clone)]
 pub struct RustBenchmark {
     pub name: &'static str,

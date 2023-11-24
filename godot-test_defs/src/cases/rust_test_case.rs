@@ -8,7 +8,7 @@ use super::{Case, CaseContext};
 
 /// Rust test case.
 ///
-/// Created by using `#[gditest]` derive macro and registered to run by test runner.
+/// Created by using `#[gditest]` macro and registered to run by test runner.
 #[derive(Copy, Clone)]
 pub struct RustTestCase {
     pub name: &'static str,

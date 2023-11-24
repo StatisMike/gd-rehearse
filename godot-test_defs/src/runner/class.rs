@@ -102,21 +102,43 @@ impl RunnerSummary {
     }
 }
 
+/// Tests and benchmark runner for custom Godot classes created using the [gdext](godot) crate.
+///
+/// Runs functions annotated with `#[gditest]` and `#[gdbench]` macros, testing and benchmarking methods and functions that make calls
+/// between Rust and Godot. To use it, create a scene in the Godot project for which you are creating a `gdext`-based GDExtension and run the
+/// scene (shell command support in progress) or directly from the editor.
+///
+/// ## Runner Properties
+/// `GdTestRunner` has some settable properties that customize its behavior:
+///
+/// - `run_tests`: If set, functions annotated with `#[gditest]` will be run. Defaults to `true`.
+/// - `run_benchmarks`: If set, functions annotated with `#[gdbench]` will be run. Defaults to `true`. If `run_tests` is also `true`, benchmarks
+///    will only be run if all tests pass successfully.
+/// - `test_keyword`: If set, only tests and benchmarks with the same `keyword` specified will be run. Defaults to an empty string, meaning
+///    that only tests and benchmarks without a `keyword` set will be run. It takes precedence over `focus` and `filters`—they will be
+///    assessed, but only in the context of this `keyword`.
+/// - `ignore_keywords`: If set, all tests and benchmarks will be run regardless of their set `keyword`.
+/// - `disallow_focus`: If set, the `focus` attribute of tests and benchmarks will be ignored.
+/// - `disallow_skip`: If set, the `skip` attribute of tests and benchmarks will be ignored.
+/// - `test_filters`: Array of strings tested against the names of tests and benchmarks. Those with names containing at least one of the specified
+///    filters will be run.
 #[derive(GodotClass)]
 #[class(base=Node)]
 pub struct GdTestRunner {
+    #[export]
+    run_tests: bool,
+    #[export]
+    run_benchmarks: bool,
     #[export]
     disallow_focus: bool,
     #[export]
     disallow_skip: bool,
     #[export]
-    test_filters: PackedStringArray,
-    #[export]
     test_keyword: GString,
     #[export]
-    run_benchmarks: bool,
+    ignore_keywords: bool,
     #[export]
-    run_tests: bool,
+    test_filters: PackedStringArray,
     tests_summary: RunnerSummary,
     benches_summary: RunnerSummary,
     config: RunnerConfig,
@@ -133,6 +155,7 @@ impl INode for GdTestRunner {
             disallow_skip: false,
             test_filters: PackedStringArray::new(),
             test_keyword: GString::new(),
+            ignore_keywords: false,
             run_benchmarks: true,
             run_tests: true,
             tests_summary: RunnerSummary::default(),
@@ -162,6 +185,7 @@ impl GdTestRunner {
             self.run_tests,
             self.run_benchmarks,
             &self.test_keyword,
+            self.ignore_keywords,
             &self.test_filters,
         )
         .unwrap();
