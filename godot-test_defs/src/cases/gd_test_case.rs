@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
 // use godot::{bind::{GodotClass, godot_api}, builtin::{GString, StringName, PackedStringArray, Array}, log::{godot_error, godot_print}, engine::{GdScript, IRefCounted, RefCounted, Object, Resource}, obj::{Base, Gd}};
 
 // #[derive(GodotClass)]

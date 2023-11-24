@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
 use super::{is_headless_run, print::MessageWriter};
 use core::fmt;
 use godot::builtin::{GString, PackedStringArray};
@@ -276,38 +282,31 @@ impl RunnerConfig {
         let writer = MessageWriter::new();
 
         if is_headless_run() {
-            writer.println("   Began run in HEADLESS mode;");
+            writer.println(&format!("{:^80}\n", "Began run in HEADLESS mode"));
         } else {
-            writer.println("   Began run in EDITOR mode;")
+            writer.println(&format!("{:^80}\n", "Began run in EDITOR mode"));
         }
-
-        writer.print_horizontal_separator();
-
-        let mut printed_more = false;
 
         let mut additional_message = Vec::new();
+        if !self.keyword().is_empty() {
+            additional_message.push(format!("using KEYWORD: '{}'", self.keyword()));
+        }
         if self.disallow_focus() {
-            additional_message.push("-disallowing focused-".to_owned());
+            additional_message.push("disallowing focused".to_owned());
         }
         if self.disallow_skip() {
-            additional_message.push("-disallowing skipping-".to_owned());
-        }
-        if !self.keyword().is_empty() {
-            additional_message.push(format!("-keyword run: '{}'-", self.keyword()));
+            additional_message.push("disallowing skipping".to_owned());
         }
 
         if !additional_message.is_empty() {
-            writer.println(&format!("   {}", additional_message.join(" & ")));
-            printed_more = true;
+            writer.println(&format!("{:^80}\n", additional_message.join(" & ")));
         }
 
         if !self.filters().is_empty() {
-            writer.println(&format!("   -filters run: {}-", self.filters().join(", ")));
-            printed_more = true;
-        }
-
-        if printed_more {
-            writer.print_horizontal_separator();
+            writer.println(&format!(
+                "   Using filters:\n   * {}\n",
+                self.filters().join("\n   * ")
+            ));
         }
     }
 }

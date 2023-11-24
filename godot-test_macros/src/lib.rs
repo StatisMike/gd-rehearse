@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::{format_ident, quote};
@@ -8,7 +14,13 @@ mod itest;
 pub(crate) mod parser;
 mod utils;
 
-/// Similar to `#[test]`, but runs an integration test with Godot.
+/// Integration test between Godot and Rust.
+/// 
+/// Similar to `#[test]`, but converting the function into integration test between Godot and Rust.
+/// 
+/// It transforms and registers annotated function for further usage by [godot_test]
+/// 
+/// 
 ///
 /// Transforms the `fn` into one returning `bool` (success of the test), which must be called explicitly.
 #[proc_macro_attribute]

@@ -1,18 +1,25 @@
-use std::time::{Duration, Instant};
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
 
 use godot::prelude::{godot_api, Base, GString, GodotClass, INode, Node, PackedStringArray};
 
-use crate::{
-    cases::{
-        rust_bench::RustBenchmark, rust_test_case::RustTestCase, Case, CaseContext, CaseOutcome,
-    },
-    registry::{
-        bench::{BenchResult, GdBenchmarks},
-        itest::GdRustItests,
-    },
-};
+use crate::cases::{Case, CaseContext, CaseOutcome};
+use crate::cases::rust_bench::RustBenchmark;
+use crate::cases::rust_test_case::RustTestCase;
 
-use super::{config::RunnerConfig, extract_file_subtitle, print::MessageWriter};
+use crate::registry::bench::{BenchResult, GdBenchmarks};
+use crate::registry::itest::GdRustItests;
+
+use super::extract_file_subtitle;
+use super::config::RunnerConfig;
+use super::print::MessageWriter;
+
+use std::time::{Duration, Instant};
+
 
 #[derive(Copy, Clone, Debug, Default)]
 pub(crate) struct RunnerSummary {
@@ -114,7 +121,6 @@ pub struct GdTestRunner {
     benches_summary: RunnerSummary,
     config: RunnerConfig,
     failed_list: Vec<String>,
-    focus_run: bool,
     #[base]
     base: Base<Node>,
 }
@@ -133,7 +139,6 @@ impl INode for GdTestRunner {
             benches_summary: RunnerSummary::default(),
             config: RunnerConfig::default(),
             failed_list: Vec::new(),
-            focus_run: true,
             base,
         }
     }
@@ -169,21 +174,25 @@ impl GdTestRunner {
         let mut rust_tests_handler: Option<GdRustItests> = None;
         let mut rust_bench_handler: Option<GdBenchmarks> = None;
 
+        let mut is_focus_run = false;
+
         // Gather tests and benches to run based on the config.
         if self.config.run_rust_tests() {
-            let handler = GdRustItests::init(&self.config);
+            let handler = GdRustItests::init(&self.config, is_focus_run);
             writer.println(&handler.get_post_init_summary());
+            is_focus_run = handler.is_focus_run();
             rust_tests_handler = Some(handler);
         }
 
         if self.config.run_rust_benchmarks() {
-            let handler = GdBenchmarks::init(&self.config);
+            let handler = GdBenchmarks::init(&self.config, is_focus_run);
             writer.println(&handler.get_post_init_summary());
             rust_bench_handler = Some(handler);
         }
 
         // Run Rust Tests.
         if let Some(mut handler) = rust_tests_handler {
+            writer.println("");
             writer.print_horizontal_separator();
             writer.println("   Running Rust tests");
             writer.print_horizontal_separator();
@@ -196,6 +205,7 @@ impl GdTestRunner {
 
         // Run Rust Benchmarks.
         if let (Some(mut handler), true) = (rust_bench_handler, rust_test_outcome) {
+            writer.println("");
             writer.print_horizontal_separator();
             writer.println("   Running Rust benchmarks");
             writer.print_horizontal_separator();
@@ -211,9 +221,9 @@ impl GdTestRunner {
         let outcome = rust_test_outcome && rust_bench_outcome;
 
         if outcome {
-          writer.print_success()
+            writer.print_success()
         } else {
-          writer.print_failure()
+            writer.print_failure()
         }
 
         self.base
@@ -262,17 +272,18 @@ impl GdTestRunner {
 
         let writer = MessageWriter::new();
 
-        let mut first_line = format!("\n{space}", space = " ".repeat(36));
+        let mut first_line = " ".repeat(36).to_string();
         for metrics in BenchResult::metrics() {
-          first_line.push_str(&format!("{:>13}", metrics));
+            first_line.push_str(&format!("{:>13}", metrics));
         }
         writer.println(&first_line);
 
         let mut last_file = None;
-        if let Some(bench) = benchmarks.get_benchmark() {
+        while let Some(bench) = benchmarks.get_benchmark() {
             writer.print_bench_pre(&bench, &mut last_file);
             let result = self.run_rust_benchmark(&bench, &ctx);
-            self.benches_summary.update_stats(&bench, &result.outcome, &mut self.failed_list);
+            self.benches_summary
+                .update_stats(&bench, &result.outcome, &mut self.failed_list);
             writer.print_bench_post(bench.get_case_name(), result);
         }
     }
@@ -287,8 +298,8 @@ impl GdTestRunner {
         // Explicit type to prevent bench from returning a value
         let err_context = || format!("gbbench `{}` failed", bench.name);
 
-        let mut success: Option<()> = None;
-        for _ in 0..200 {
+        let mut success: Option<()>;
+        for _ in 0..crate::registry::bench::WARMUP_RUNS {
             success = godot::private::handle_panic(err_context, || (bench.function)(ctx));
             if success.is_none() {
                 return BenchResult::failed();
@@ -296,12 +307,12 @@ impl GdTestRunner {
         }
 
         let mut times = Vec::with_capacity(501);
-        for _ in 0..501 {
+        for _ in 0..crate::registry::bench::TEST_RUNS {
             let start = Instant::now();
             success = godot::private::handle_panic(err_context, || (bench.function)(ctx));
             let duration = start.elapsed();
             if success.is_none() {
-              return BenchResult::failed();
+                return BenchResult::failed();
             }
             times.push(duration / inner_repetitions as u32);
         }

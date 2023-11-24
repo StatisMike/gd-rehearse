@@ -1,11 +1,15 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
+use crate::parser::{AttributeIdent, AttributeValueParser};
+use crate::utils::bail;
+
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use venial::{Declaration, Error, FnParam, Function};
-
-use crate::{
-    parser::{AttributeIdent, AttributeValueParser},
-    utils::bail,
-};
 
 const DEFAULT_REPETITIONS: usize = 100;
 
@@ -16,7 +20,10 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
     };
 
     // Note: allow attributes for things like #[rustfmt] or #[clippy]
-    if func.generic_params.is_some() || !func.params.is_empty() || func.where_clause.is_some() {
+    if func.generic_params.is_some()
+        || func.params.len() > 1
+        || func.where_clause.is_some()
+    {
         return bad_signature(&func);
     }
 
@@ -88,7 +95,7 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
                 .ty
                 .tokens
                 .last()
-                .map(|last| last.to_string() == "TestContext")
+                .map(|last| last.to_string() == "CaseContext")
                 .unwrap_or(false);
             if is_context {
                 param.to_token_stream()
@@ -96,6 +103,7 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
                 return bad_signature(&func);
             }
         } else {
+            // TokenStream::new()
             return bad_signature(&func);
         }
     } else {
@@ -112,7 +120,7 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
             }
         }
 
-        ::godot::sys::plugin_add!{GODOT_TEST_RUST_BENCHMARKS; ::godot_test::bench::RustBenchmark {
+        ::godot::sys::plugin_add!{GODOT_TEST_RUST_BENCHMARKS in ::godot_test::bench; ::godot_test::bench::RustBenchmark {
           name: #bench_name_str,
           focused: #focused,
           skipped: #skipped,
@@ -128,8 +136,9 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
 fn bad_signature(func: &Function) -> Result<TokenStream, Error> {
     bail!(
         func,
-        "#[bench] function must have one of these signatures:\
-        \n  fn {f}() {{ ... }}",
+        "#[gdbench] function must have one of these signatures:\
+        \n  fn {f}() -> Type {{ ... }}\
+        \n  fn {f}(ctx: &CaseContext) -> Type {{ ... }}",
         f = func.name,
     )
 }

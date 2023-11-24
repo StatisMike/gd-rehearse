@@ -1,11 +1,15 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
 pub mod gd_test_case;
 pub mod rust_bench;
 pub mod rust_test_case;
 
-use godot::{
-    engine::{Engine, Node},
-    obj::Gd,
-};
+use godot::engine::{Engine, Node};
+use godot::obj::Gd;
 
 /// Test context for [RustTestCase] and [RustBenchmark].
 pub struct CaseContext {

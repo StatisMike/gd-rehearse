@@ -1,11 +1,15 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
+use crate::parser::{AttributeIdent, AttributeValueParser};
+use crate::utils::bail;
+
 use proc_macro2::TokenStream;
 use quote::{quote, ToTokens};
 use venial::{Declaration, Error, FnParam, Function};
-
-use crate::{
-    parser::{AttributeIdent, AttributeValueParser},
-    utils::bail,
-};
 
 pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> {
     let func = match input_decl {
@@ -71,7 +75,7 @@ pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> 
                 .ty
                 .tokens
                 .last()
-                .map(|last| last.to_string() == "TestContext")
+                .map(|last| last.to_string() == "CaseContext")
                 .unwrap_or(false);
             if is_context {
                 param.to_token_stream()
@@ -92,7 +96,7 @@ pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> 
             #body
         }
 
-        ::godot::sys::plugin_add!(GODOT_TEST_RUST_TEST_CASES; ::godot_test::itest::RustTestCase {
+        ::godot::sys::plugin_add!(GODOT_TEST_RUST_TEST_CASES in ::godot_test::itest; ::godot_test::itest::RustTestCase {
             name: #test_name_str,
             skipped: #skipped,
             focused: #focused,
@@ -101,15 +105,6 @@ pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> 
             line: std::line!(),
             function: #test_name,
         });
-
-        // ::godot_test::rust_test_case_add!(::godot_test::itest::RustTestCase {
-        //     name: #test_name_str,
-        //     skipped: #skipped,
-        //     focused: #focused,
-        //     file: std::file!(),
-        //     line: std::line!(),
-        //     function: #test_name,
-        // });
     })
 }
 
@@ -118,7 +113,7 @@ fn bad_signature(func: &Function) -> Result<TokenStream, Error> {
         func,
         "#[gditest] function must have one of these signatures:\
         \n  fn {f}() {{ ... }}\
-        \n  fn {f}(ctx: &TestContext) {{ ... }}",
+        \n  fn {f}(ctx: &CaseContext) {{ ... }}",
         f = func.name,
     )
 }

@@ -1,12 +1,16 @@
-use godot::log::godot_print;
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
 
-use crate::{
-    cases::{Case, CaseOutcome},
-    registry::bench::BenchResult,
-    runner::extract_file_subtitle,
-};
+use crate::cases::{Case, CaseOutcome};
+use crate::registry::bench::BenchResult;
+use crate::runner::extract_file_subtitle;
 
 use super::is_headless_run;
+
+use godot::log::godot_print;
 
 // Colors to use in terminal stdout.
 // const FMT_CYAN_BOLD: &str = "\x1b[36;1;1m";
@@ -15,14 +19,6 @@ use super::is_headless_run;
 // const FMT_YELLOW: &str = "\x1b[33m";
 // const FMT_RED: &str = "\x1b[31m";
 // const FMT_END: &str = "\x1b[0m";
-
-// Const messages.
-const SEPARATOR_LINE: &str = "----------------------------------------";
-const RUN_BEGIN: &str = "-----------Running godot-test-----------";
-
-const SUMMARY_LINE: &str = "========================================";
-const RUN_SUCCESS: &str = "================ SUCCESS ===============";
-const RUN_FAIL: &str = "================ FAILURE ===============";
 
 pub(crate) struct MessageWriter {
     to_godot: bool,
@@ -47,19 +43,34 @@ impl MessageWriter {
     }
 
     pub fn print_begin(&self) {
-        self.println(&[SEPARATOR_LINE, RUN_BEGIN, SEPARATOR_LINE].join("\n"));
+        self.println(&format!(
+            "{hf}\n{hp}{h:^40}{hp}\n{hf}",
+            hf = "-".repeat(80),
+            hp = "-".repeat(20),
+            h = "Running godot-test"
+        ));
     }
 
     pub fn print_success(&self) {
-        self.println(&[SUMMARY_LINE, RUN_SUCCESS, SUMMARY_LINE].join("\n"));
+        self.println(&format!(
+            "\n{hf}\n{hp}{h:^38}{hp}\n{hf}",
+            hf = "= ".repeat(40),
+            hp = " =".repeat(10),
+            h = "! SUCCESS !"
+        ));
     }
 
     pub fn print_failure(&self) {
-        self.println(&[SUMMARY_LINE, RUN_FAIL, SUMMARY_LINE].join("\n"));
+        self.println(&format!(
+            "\n{hf}\n{hp}{h:^38}{hp}\n{hf}",
+            hf = "! ".repeat(40),
+            hp = " !".repeat(10),
+            h = "FAILURE"
+        ));
     }
 
     pub fn print_horizontal_separator(&self) {
-        self.println(SEPARATOR_LINE);
+        self.println(&"-".repeat(80).to_string());
     }
 
     pub fn print_test_pre(&self, test: impl Case, last_file: &mut Option<String>) {
@@ -137,7 +148,7 @@ impl MessageWriter {
                 }
                 outcome
             }
-            _ => format!("{:>13}", result.outcome),
+            _ => format!("    {}", result.outcome),
         };
 
         match (self.to_godot, &result.outcome) {

@@ -1,9 +1,14 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
 use std::collections::HashSet;
 
-use crate::{
-    cases::{rust_test_case::RustTestCase, Case},
-    runner::config::RunnerConfig,
-};
+use crate::cases::Case;
+use crate::cases::rust_test_case::RustTestCase;
+use crate::runner::config::RunnerConfig;
 
 godot::sys::plugin_registry!(pub GODOT_TEST_RUST_TEST_CASES: RustTestCase);
 
@@ -30,11 +35,11 @@ impl GdRustItests {
         self.is_focus_run
     }
 
-    pub(crate) fn init(config: &RunnerConfig) -> Self {
+    pub(crate) fn init(config: &RunnerConfig, is_focus_run: bool) -> Self {
         let mut instance = Self {
             tests: Vec::new(),
             files_count: 0,
-            is_focus_run: false,
+            is_focus_run,
         };
 
         instance.collect_rust_tests(config);
@@ -47,10 +52,6 @@ impl GdRustItests {
             self.tests_count(),
             self.files_count()
         )
-    }
-
-    fn passes_filter(filters: &[String], test_name: &str) -> bool {
-        filters.is_empty() || filters.iter().any(|x| test_name.contains(x))
     }
 
     fn get_rust_case() -> Option<RustTestCase> {
@@ -72,7 +73,9 @@ impl GdRustItests {
                     self.is_focus_run = true;
                 }
 
-                if !self.is_focus_run || test.should_run_focus(config.disallow_focus()) {
+                if (!self.is_focus_run && test.should_run_filters(config.filters()))
+                    || test.should_run_focus(config.disallow_focus())
+                {
                     all_files.insert(test.file);
                     self.tests.push(test);
                 }

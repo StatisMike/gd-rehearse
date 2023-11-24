@@ -5,8 +5,8 @@ use crate::cases::rust_bench::RustBenchmark;
 use crate::cases::{Case, CaseOutcome};
 use crate::runner::config::RunnerConfig;
 
-const WARMUP_RUNS: usize = 200;
-const TEST_RUNS: usize = 501; // uneven, so median need not be interpolated.
+pub(crate) const WARMUP_RUNS: usize = 200;
+pub(crate) const TEST_RUNS: usize = 501; // uneven, so median need not be interpolated.
 const METRIC_COUNT: usize = 2;
 
 godot::sys::plugin_registry!(pub GODOT_TEST_RUST_BENCHMARKS: RustBenchmark);
@@ -26,11 +26,11 @@ impl GdBenchmarks {
         self.files_count
     }
 
-    pub(crate) fn init(config: &RunnerConfig) -> Self {
+    pub(crate) fn init(config: &RunnerConfig, is_focus_run: bool) -> Self {
         let mut instance = Self {
             benches: Vec::new(),
             files_count: 0,
-            is_focus_run: false,
+            is_focus_run,
         };
 
         instance.collect_rust_benchmarks(config);
@@ -68,7 +68,9 @@ impl GdBenchmarks {
                     self.is_focus_run = true;
                 }
 
-                if !self.is_focus_run || bench.should_run_focus(config.disallow_focus()) {
+                if (!self.is_focus_run && bench.should_run_filters(config.filters()))
+                    || bench.should_run_focus(config.disallow_focus())
+                {
                     all_files.insert(bench.file);
                     self.benches.push(bench);
                 }
