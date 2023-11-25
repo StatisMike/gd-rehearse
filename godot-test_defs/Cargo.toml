@@ -1,18 +1,14 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-#  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-
 [package]
 name = "godot-test_defs"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.70"
 license = "MPL-2.0"
-keywords = ["gamedev", "godot", "engine", "integration","test"]
-categories = ["game-engines", "graphics", "test"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
 paste = "1.0.14"
+
+[package.metadata.docs.rs]
+license-file = "../License.txt"

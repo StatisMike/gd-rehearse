@@ -26,7 +26,7 @@ mod utils;
 /// - Have no parameters or only a singular [`CaseContext`](godot_test_defs::cases::CaseContext).
 ///
 /// ## Attributes
-/// An attribute-less macro will make the tests run, but some attributes are available for better customizability, especially when working 
+/// An attribute-less macro will make the tests run, but some attributes are available for better customizability, especially when working
 /// on specific attributes and creating more narrow test runner scenes.
 ///
 /// - `skip`: Skips the test during run.

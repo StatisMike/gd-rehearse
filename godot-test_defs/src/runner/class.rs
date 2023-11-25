@@ -4,22 +4,20 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-
 use godot::prelude::{godot_api, Base, GString, GodotClass, INode, Node, PackedStringArray};
 
-use crate::cases::{Case, CaseContext, CaseOutcome};
 use crate::cases::rust_bench::RustBenchmark;
 use crate::cases::rust_test_case::RustTestCase;
+use crate::cases::{Case, CaseContext, CaseOutcome};
 
 use crate::registry::bench::{BenchResult, GdBenchmarks};
 use crate::registry::itest::GdRustItests;
 
-use super::extract_file_subtitle;
 use super::config::RunnerConfig;
+use super::extract_file_subtitle;
 use super::print::MessageWriter;
 
 use std::time::{Duration, Instant};
-
 
 #[derive(Copy, Clone, Debug, Default)]
 pub(crate) struct RunnerSummary {
@@ -104,24 +102,40 @@ impl RunnerSummary {
 
 /// Tests and benchmark runner for custom Godot classes created using the [gdext](godot) crate.
 ///
-/// Runs functions annotated with `#[gditest]` and `#[gdbench]` macros, testing and benchmarking methods and functions that make calls
-/// between Rust and Godot. To use it, create a scene in the Godot project for which you are creating a `gdext`-based GDExtension and run the
-/// scene (shell command support in progress) or directly from the editor.
+/// Runs functions annotated with `#[gditest]` and `#[gdbench]` macros, facilitating the testing and benchmarking of methods and functions that involve calls between Rust and Godot. To utilize it, create a scene in the Godot project associated with your `gdext`-based GDExtension and run the scene either from the command line or directly from the Godot editor.
 ///
-/// ## Runner Properties
-/// `GdTestRunner` has some settable properties that customize its behavior:
+/// ## Godot Properties
+/// 
+/// `GdTestRunner` exposes some settable Godot-exported properties that customize its behavior:
 ///
-/// - `run_tests`: If set, functions annotated with `#[gditest]` will be run. Defaults to `true`.
-/// - `run_benchmarks`: If set, functions annotated with `#[gdbench]` will be run. Defaults to `true`. If `run_tests` is also `true`, benchmarks
-///    will only be run if all tests pass successfully.
-/// - `test_keyword`: If set, only tests and benchmarks with the same `keyword` specified will be run. Defaults to an empty string, meaning
-///    that only tests and benchmarks without a `keyword` set will be run. It takes precedence over `focus` and `filters`—they will be
+/// - `run_tests`: If set, functions annotated with `#[gditest]` will be executed. Defaults to `true`.
+/// - `run_benchmarks`: If set, functions annotated with `#[gdbench]` will be executed. Defaults to `true`. If `run_tests` is also `true`, benchmarks
+///    will only be executed if all tests pass successfully.
+/// - `test_keyword`: If set, only tests and benchmarks with the same `keyword` specified will be executed. Defaults to an empty string, meaning
+///    that only tests and benchmarks without a `keyword` set will be executed. It takes precedence over `focus` and `filters`—they will be
 ///    assessed, but only in the context of this `keyword`.
-/// - `ignore_keywords`: If set, all tests and benchmarks will be run regardless of their set `keyword`.
+/// - `ignore_keywords`: If set, all tests and benchmarks will be executed regardless of their set `keyword`.
 /// - `disallow_focus`: If set, the `focus` attribute of tests and benchmarks will be ignored.
 /// - `disallow_skip`: If set, the `skip` attribute of tests and benchmarks will be ignored.
-/// - `test_filters`: Array of strings tested against the names of tests and benchmarks. Those with names containing at least one of the specified
-///    filters will be run.
+/// - `test_filters`: An array of strings tested against the names of tests and benchmarks. Those with names containing at least one of the specified
+///    filters will be executed.
+/// 
+/// ## Command Line Arguments
+/// 
+/// `GdTestRunner` is also suitable for running from the command line, as part of the Godot binary execution in headless mode:
+/// 
+/// ```
+/// godot_executable --path path/to/godot/project [scene path] --headless -- [optional arguments]
+/// ```
+/// - `scene_path`: An optional path to the scene with the `GdTestRunner` object. Not needed if the testing scene is the main scene of the project.
+/// - `optional arguments`: Options such as:
+///   - `--rust-test` or `--rust-benchmarks`: If at least one is selected, overwrites the analogous properties and runs only the specified element.
+///   - `--disallow-focus` or `--allow-focus`: Overwrites the `disallow_focus` property.
+///   - `--disallow-skip` or `--disallow-focus`: Overwrites the `disallow_skip` property.
+///   - `--mute-keyword` or `--keyword=my_keyword`: Either mutes the `test_keyword` property or replaces it with the specified one.
+///   - `--ignore-keywords`: Replaces the `ignore_keywords` property.
+///   - `--mute-filters` or `--filters=[filter1,filter2]`: Either mutes the `test_filters` property or replaces it with the specified filters.
+/// 
 #[derive(GodotClass)]
 #[class(base=Node)]
 pub struct GdTestRunner {
@@ -176,10 +190,10 @@ impl INode for GdTestRunner {
 impl GdTestRunner {
     #[func]
     fn test_run(&mut self) {
+        let start = Instant::now();
         let writer = MessageWriter::new();
-        writer.print_begin();
 
-        self.config = RunnerConfig::new(
+        match RunnerConfig::new(
             self.disallow_focus,
             self.disallow_skip,
             self.run_tests,
@@ -187,8 +201,16 @@ impl GdTestRunner {
             &self.test_keyword,
             self.ignore_keywords,
             &self.test_filters,
-        )
-        .unwrap();
+        ) {
+            Ok(config) => { self.config = config } ,
+            Err(error) => {
+                writer.println(&error.to_string());
+                self.end(1);
+                return;
+            }
+        }
+
+        writer.print_begin();
 
         self.config.print_info();
 
@@ -243,18 +265,27 @@ impl GdTestRunner {
         }
 
         let outcome = rust_test_outcome && rust_bench_outcome;
+        let duration = start.elapsed();
+        let mut duration_secs = duration.as_secs();
+        let duration_mins = (duration_secs as f32 / 60.).floor() as u64;
+        duration_secs -= duration_mins * 60;
 
         if outcome {
             writer.print_success()
         } else {
             writer.print_failure()
         }
+        writer.println(&format!("\n  Took total: {duration_mins}:{duration_secs:0>2}"));
 
+        self.end(outcome as i32);
+    }
+
+    fn end(&self, exit_code: i32) {
         self.base
             .get_tree()
             .unwrap()
             .quit_ex()
-            .exit_code(outcome as i32)
+            .exit_code(exit_code)
             .done();
     }
 

@@ -5,8 +5,8 @@
 */
 
 pub use godot_test_defs::cases::CaseContext;
-pub use godot_test_macros::*;
 pub use godot_test_defs::runner::GdTestRunner;
+pub use godot_test_macros::*;
 
 pub mod itest {
     pub use godot_test_defs::cases::rust_test_case::RustTestCase;

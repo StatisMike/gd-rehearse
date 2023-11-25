@@ -1,11 +1,8 @@
-# This Source Code Form is subject to the terms of the Mozilla Public
-#  License, v. 2.0. If a copy of the MPL was not distributed with this
-#  file, You can obtain one at https://mozilla.org/MPL/2.0/.
-
 [package]
 name = "tests"
 version = "0.1.0"
 edition = "2021"
+license = "MPL-2.0"
 
 [lib]
 crate-type = ["cdylib"]
@@ -14,3 +11,6 @@ crate-type = ["cdylib"]
 [dependencies]
 godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
 godot-test = { path = "../../godot-test" }
+
+[package.metadata.docs.rs]
+license-file = "../License.txt"

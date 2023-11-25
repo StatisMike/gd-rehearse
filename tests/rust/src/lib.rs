@@ -6,8 +6,8 @@
 
 use godot::init::{gdextension, ExtensionLibrary};
 
-mod itest;
 mod bench;
+mod itest;
 
 struct GodotTestTests;
 

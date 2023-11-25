@@ -96,7 +96,7 @@ pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> 
             #body
         }
 
-        ::godot::sys::plugin_add!(GODOT_TEST_RUST_TEST_CASES in ::godot_test::itest; ::godot_test::itest::RustTestCase {
+        ::godot::sys::plugin_add!(GODOT_TEST_RUST_TEST_CASES in godot_test::itest; ::godot_test::itest::RustTestCase {
             name: #test_name_str,
             skipped: #skipped,
             focused: #focused,

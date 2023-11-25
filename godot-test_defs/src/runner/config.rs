@@ -45,8 +45,8 @@ impl CliConfig {
     pub const CMD_USER_RUST_BENCHMARKS: &'static str = "--rust-bench";
     pub const CMD_USER_DISALLOW_FOCUS: &'static str = "--disallow-focus";
     pub const CMD_USER_ALLOW_FOCUS: &'static str = "--allow-focus";
-    pub const CMD_USER_DISALLOW_SKIP: &'static str = "--disallow-strip";
-    pub const CMD_USER_ALLOW_SKIP: &'static str = "--allow-strip";
+    pub const CMD_USER_DISALLOW_SKIP: &'static str = "--disallow-skip";
+    pub const CMD_USER_ALLOW_SKIP: &'static str = "--allow-skip";
     pub const CMD_USER_MUTE_KEYWORD: &'static str = "--mute-keyword";
     pub const CMD_USER_IGNORE_KEYWORDS: &'static str = "--ignore-keywords";
     pub const CMD_USER_MUTE_FILTERS: &'static str = "--mute-filters";

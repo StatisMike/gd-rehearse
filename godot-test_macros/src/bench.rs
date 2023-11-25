@@ -20,10 +20,7 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
     };
 
     // Note: allow attributes for things like #[rustfmt] or #[clippy]
-    if func.generic_params.is_some()
-        || func.params.len() > 1
-        || func.where_clause.is_some()
-    {
+    if func.generic_params.is_some() || func.params.len() > 1 || func.where_clause.is_some() {
         return bad_signature(&func);
     }
 
@@ -120,7 +117,7 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
             }
         }
 
-        ::godot::sys::plugin_add!{GODOT_TEST_RUST_BENCHMARKS in ::godot_test::bench; ::godot_test::bench::RustBenchmark {
+        ::godot::sys::plugin_add!{GODOT_TEST_RUST_BENCHMARKS in godot_test::bench; ::godot_test::bench::RustBenchmark {
           name: #bench_name_str,
           focused: #focused,
           skipped: #skipped,

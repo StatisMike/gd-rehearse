@@ -12,7 +12,7 @@ use godot::engine::{Engine, Node};
 use godot::obj::Gd;
 
 /// Optional test context for `#[gditest]` and `#[gdbench]` annotated functions.
-/// 
+///
 /// Currently it allows only to access [GdTestRunner](crate::runner::GdTestRunner) scene tree during tests and benchmarking.
 pub struct CaseContext {
     pub scene_tree: Gd<Node>,
@@ -78,6 +78,8 @@ pub(crate) trait Case {
         };
         if let Some(case_keyword) = self.get_case_keyword() {
             return *case_keyword == keyword;
+        } else if keyword.is_empty() {
+            return true;
         }
         false
     }

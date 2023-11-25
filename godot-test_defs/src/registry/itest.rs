@@ -6,8 +6,8 @@
 
 use std::collections::HashSet;
 
-use crate::cases::Case;
 use crate::cases::rust_test_case::RustTestCase;
+use crate::cases::Case;
 use crate::runner::config::RunnerConfig;
 
 godot::sys::plugin_registry!(pub GODOT_TEST_RUST_TEST_CASES: RustTestCase);

@@ -163,7 +163,7 @@ impl MessageWriter {
             }
             // Otherwise just outcome on same line.
             (false, _) => {
-                print!("{outcome\n}");
+                println!("{outcome\n}");
             }
         }
     }

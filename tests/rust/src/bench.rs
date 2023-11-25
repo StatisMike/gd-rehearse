@@ -1,8 +1,8 @@
+use godot::engine::Object;
 use godot::obj::Gd;
 use godot::obj::InstanceId;
-use godot::engine::Object;
-use godot_test::CaseContext;
 use godot_test::gdbench;
+use godot_test::CaseContext;
 
 #[gdbench]
 fn focused_bench() -> i32 {
