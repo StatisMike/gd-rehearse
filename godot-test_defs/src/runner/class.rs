@@ -105,7 +105,7 @@ impl RunnerSummary {
 /// Runs functions annotated with `#[gditest]` and `#[gdbench]` macros, facilitating the testing and benchmarking of methods and functions that involve calls between Rust and Godot. To utilize it, create a scene in the Godot project associated with your `gdext`-based GDExtension and run the scene either from the command line or directly from the Godot editor.
 ///
 /// ## Godot Properties
-/// 
+///
 /// `GdTestRunner` exposes some settable Godot-exported properties that customize its behavior:
 ///
 /// - `run_tests`: If set, functions annotated with `#[gditest]` will be executed. Defaults to `true`.
@@ -119,12 +119,12 @@ impl RunnerSummary {
 /// - `disallow_skip`: If set, the `skip` attribute of tests and benchmarks will be ignored.
 /// - `test_filters`: An array of strings tested against the names of tests and benchmarks. Those with names containing at least one of the specified
 ///    filters will be executed.
-/// 
+///
 /// ## Command Line Arguments
-/// 
+///
 /// `GdTestRunner` is also suitable for running from the command line, as part of the Godot binary execution in headless mode:
-/// 
-/// ```
+///
+/// ```no_compile
 /// godot_executable --path path/to/godot/project [scene path] --headless -- [optional arguments]
 /// ```
 /// - `scene_path`: An optional path to the scene with the `GdTestRunner` object. Not needed if the testing scene is the main scene of the project.
@@ -135,7 +135,7 @@ impl RunnerSummary {
 ///   - `--mute-keyword` or `--keyword=my_keyword`: Either mutes the `test_keyword` property or replaces it with the specified one.
 ///   - `--ignore-keywords`: Replaces the `ignore_keywords` property.
 ///   - `--mute-filters` or `--filters=[filter1,filter2]`: Either mutes the `test_filters` property or replaces it with the specified filters.
-/// 
+///
 #[derive(GodotClass)]
 #[class(base=Node)]
 pub struct GdTestRunner {
@@ -202,7 +202,7 @@ impl GdTestRunner {
             self.ignore_keywords,
             &self.test_filters,
         ) {
-            Ok(config) => { self.config = config } ,
+            Ok(config) => self.config = config,
             Err(error) => {
                 writer.println(&error.to_string());
                 self.end(1);
@@ -275,7 +275,9 @@ impl GdTestRunner {
         } else {
             writer.print_failure()
         }
-        writer.println(&format!("\n  Took total: {duration_mins}:{duration_secs:0>2}"));
+        writer.println(&format!(
+            "\n  Took total: {duration_mins}:{duration_secs:0>2}"
+        ));
 
         self.end(outcome as i32);
     }

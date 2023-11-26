@@ -35,9 +35,11 @@ mod utils;
 ///
 /// ## Examples
 /// ```no_run
-/// use godot_test::*;
+/// use godot_test::CaseContext;
+/// use godot_test::itest::*;
 ///
-/// // Will cause a focus run during which only the focused test will be run, but only with `my test` as a keyword in the runner.
+/// // Causes a focus run during which only the focused tests will be executed, but only with
+/// // `my test` as a keyword in the runner.
 /// #[gditest(focus, keyword = "my test")]
 /// fn focused_test() {
 ///     assert!(true);
@@ -63,31 +65,33 @@ pub fn gditest(meta: TokenStream, input: TokenStream) -> TokenStream {
 
 /// Benchmark for gdext classes and functions integrated with Godot.
 ///
-/// It transforms and registers the annotated function for further usage by [`GdTestRunner`](godot_test_defs::runner::GdTestRunner)
-/// in some Godot test scene. When the runner enters the scene, it will run all qualified benchmarks.
+/// This macro transforms and registers the annotated function for further usage by [`GdTestRunner`](godot_test_defs::runner::GdTestRunner)
+/// within a Godot test scene. When the runner enters the scene, it executes all qualified benchmarks.
 ///
-/// A function annotated with `#[gdbench]` needs to:
+/// A function annotated with `#[gdbench]` must:
 /// - Have a return value.
 /// - Have no parameters or only a singular [`CaseContext`](godot_test_defs::cases::CaseContext).
 ///
-/// Every benchmark is run 200 times for a *warm-up*, and then 501 times to assess runtime (uneven times to easily extract the median).
-/// Minimum and median run times will be shown.
+/// Every benchmark is executed 200 times for a *warm-up*, followed by 501 additional runs to assess runtime (an odd number of runs for easy
+/// median extraction). Minimum and median run times will be displayed.
 ///
 /// ## Attributes
-/// An attribute-less macro will make the benchmark run, but there are some available for better customizability, especially when working on
-/// specific attributes and creating more narrow test runner scenes.
+/// An attribute-less macro will make the benchmark run, but several attributes are available for better customizability, especially when
+/// working on specific attributes and creating more narrowly-focused test runner scenes.
 ///
-/// - `skip`: Skips the benchmark during run.
-/// - `focus`: Forces focus run, in which only benchmarks annotated with `focus` will be run.
-/// - `keyword`: A specific keyword that will be picked up by the runner, and the benchmark will be run only if the runner has the same keyword specified.
-/// - `repeat`: Number of repeats the benchmark should be run internally. By default, the function will execute 100 times within every run.
+/// - `skip`: Skips the benchmark during execution.
+/// - `focus`: Forces a focused run, in which only benchmarks annotated with `focus` will be executed.
+/// - `keyword`: A specific keyword that will be picked up by the runner. The benchmark runs only if the runner has the same keyword specified.
+/// - `repeat`: Specifies the number of internal repeats the benchmark should undergo. By default, the function executes 100 times within every run.
 ///
 /// ## Examples
 /// ```no_run
-/// use godot_test::*;
+/// use godot_test::CaseContext;
+/// use godot_test::bench::*;
 /// use godot::obj::InstanceId;
 ///
-/// // Will cause a focus run during which only the focused test will be run, but only with `my bench` as a keyword in the runner.
+/// // Causes a focus run during which only the focused benchmarks will be executed, but only with
+/// // `my bench` as a keyword in the runner.
 /// #[gdbench(focus, keyword = "my bench")]
 /// fn focused_bench() -> i32 {
 ///     1337

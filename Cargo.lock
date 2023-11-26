@@ -92,6 +92,7 @@ dependencies = [
 name = "godot-test"
 version = "0.1.0"
 dependencies = [
+ "godot",
  "godot-test_defs",
  "godot-test_macros",
 ]

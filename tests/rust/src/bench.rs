@@ -1,7 +1,7 @@
 use godot::engine::Object;
 use godot::obj::Gd;
 use godot::obj::InstanceId;
-use godot_test::gdbench;
+use godot_test::bench::*;
 use godot_test::CaseContext;
 
 #[gdbench]

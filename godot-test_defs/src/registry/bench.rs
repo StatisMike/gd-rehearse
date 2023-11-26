@@ -11,7 +11,8 @@ const METRIC_COUNT: usize = 2;
 
 godot::sys::plugin_registry!(pub GODOT_TEST_RUST_BENCHMARKS: RustBenchmark);
 
-pub struct GdBenchmarks {
+#[doc(hidden)]
+pub(crate) struct GdBenchmarks {
     benches: Vec<RustBenchmark>,
     files_count: usize,
     is_focus_run: bool,

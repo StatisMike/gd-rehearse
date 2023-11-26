@@ -11,6 +11,8 @@ categories = ["game-engines", "graphics", "test"]
 [dependencies]
 godot-test_macros = { path = "../godot-test_macros"}
 godot-test_defs = { path = "../godot-test_defs"}
+# For direct link in documentation
+godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
 
 [package.metadata.docs.rs]
 license-file = "../License.txt"

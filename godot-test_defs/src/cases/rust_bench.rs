@@ -6,7 +6,7 @@
 
 use super::{Case, CaseContext};
 
-/// Rust test case.
+/// Rust benchmark.
 ///
 /// Created by using `#[gdbench]` macro and registered to run by test runner.
 #[derive(Copy, Clone)]

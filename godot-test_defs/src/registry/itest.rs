@@ -12,7 +12,8 @@ use crate::runner::config::RunnerConfig;
 
 godot::sys::plugin_registry!(pub GODOT_TEST_RUST_TEST_CASES: RustTestCase);
 
-pub struct GdRustItests {
+#[doc(hidden)]
+pub(crate) struct GdRustItests {
     tests: Vec<RustTestCase>,
     files_count: usize,
     is_focus_run: bool,
