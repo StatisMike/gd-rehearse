@@ -1,0 +1,34 @@
+name: Documentation generation
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+
+jobs:
+
+  doc:
+    name: Documentation on Github Pages
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Documentation
+        run: cargo doc --no-deps
+        
+      - name: Setup index
+        run: cp ./doc_index.html ./target/doc/index.html
+
+      - name: Deploy
+        if: ${{ github.event_name == 'push' }}
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./target/doc
+          force_orphan: true
