@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+*/
+
 use std::collections::HashSet;
 use std::time::Duration;
 
@@ -78,9 +84,10 @@ impl GdBenchmarks {
             }
         }
 
-        // Sort alphabetically for deterministic run order
+        // Sort for deterministic run order: by file name and line number.
         self.benches
-            .sort_by_key(|bench| format!("{}{}", bench.file, bench.name));
+            .sort_by(|a, b| format!("{}{}", b.file, b.line).cmp(&format!("{}{}", a.file, a.line)));
+
         self.files_count = all_files.len();
     }
 }

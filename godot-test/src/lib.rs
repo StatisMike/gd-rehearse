@@ -5,10 +5,10 @@
 */
 //! Framework for testing and benchmarking [`godot-rust`](godot)-dependent code.
 //!
-//! When using the standard `#[test]` Rust macro in a Godot project, tests may fail if they involve objects requiring the Godot 
-//! executable to run. `godot-test` addresses this limitation by introducing the [`#[gditest]`](macro@godot_test_macros::gditest) and 
-//! [`#[gdbench]`](macro@godot_test_macros::gdbench) macros. These can be used to annotate functions intended for testing or benchmarking 
-//! your code, and the crate provides the [`GdTestRunner`] [`GodotClass`](trait@godot::prelude::GodotClass) for executing them within 
+//! When using the standard `#[test]` Rust macro in a Godot project, tests may fail if they involve objects requiring the Godot
+//! executable to run. `godot-test` addresses this limitation by introducing the [`#[gditest]`](macro@godot_test_macros::gditest) and
+//! [`#[gdbench]`](macro@godot_test_macros::gdbench) macros. These can be used to annotate functions intended for testing or benchmarking
+//! your code, and the crate provides the [`GdTestRunner`] [`GodotClass`](trait@godot::prelude::GodotClass) for executing them within
 //! a Godot scene.
 
 pub use godot_test_defs::cases::CaseContext;
