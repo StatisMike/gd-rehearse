@@ -16,7 +16,7 @@ The API is still in early development and may undergo changes. Contributions, di
 
 ## Output
 
-Every execution of `GdTestRunner`` generates output, appearing in the terminal when run from the command line in headless mode 
+Every execution of `GdTestRunner` generates output, appearing in the terminal when run from the command line in headless mode 
 or in the Godot console when executed from the editor. The output resembles the example below:
 
 ```
@@ -35,14 +35,14 @@ or in the Godot console when executed from the editor. The output resembles the 
 --------------------------------------------------------------------------------
 
    itest.rs:
-   -- test_with_ctx ... ok!
-   -- skipped_test ... ~skipped~
    -- simple_test ... ok!
    -- second_test ... ok!
-   -- keyword_class_test ... ok!
    -- focused_test ... ok!
-   -- filter_me_too ... ok!
+   -- skipped_test ... ~skipped~
+   -- test_with_ctx ... ok!
+   -- keyword_class_test ... ok!
    -- filter_me ... ok!
+   -- filter_me_too ... ok!
 
 Test result: ok!. 7 passed; 0 failed, 1 skipped.
   Time: 0.00s.
@@ -54,11 +54,11 @@ Test result: ok!. 7 passed; 0 failed, 1 skipped.
 
    bench.rs:
    -- skipped_bench              ...    ~skipped~
-   -- focused_bench              ...      0.017μs      0.022μs
-   -- bench_with_ctx             ...      2.425μs      4.056μs
+   -- bench_with_ctx             ...      2.309μs      2.503μs
+   -- focused_bench              ...      0.014μs      0.014μs
 
 Test result: ok!. 2 passed; 0 failed, 1 skipped.
-  Time: 0.33s.
+  Time: 0.23s.
 
 = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
  = = = = = = = = = =             ! SUCCESS !               = = = = = = = = = =
@@ -69,14 +69,18 @@ Test result: ok!. 2 passed; 0 failed, 1 skipped.
 
 ## Setup
 
-To run tests and benchmarks, the macros alone are not sufficient. You need to create a Godot project linked to your `gdext` 
-extension. This project should contain a scene with a `GdTestRunner` node as the base node. You can easily set this up when 
-creating a Godot application. If you're developing a `gdext` extension, consider having a minimal Godot project inside your 
-crate's workspace. You can find example of the implementation in the `tests` subcrate of this crate.
+To run tests and benchmarks, the macros alone are not sufficient. You need to create a Godot project using your `gdext` 
+extension. This project should contain a scene with a `GdTestRunner` node as the base node - so additional scene if you 
+are creating a Godot application. If you're developing a `gdext` extension, you need to have a minimal Godot project inside your 
+crate's workspace. You can find an example of the implementation in the `tests` directory of this repo.
 
 After setting up the scene, you can run it from the Godot editor or the command line. Refer to the `GdTestRunner` documentation 
 for additional information.
 
+> ⚠️ While running tests from the editor, if the full runner run is very short the output won't always get printed to Godot
+console.
+
 ## Note
 
-The functionality of this crate is heavily inspired by the [internal tests of `godot-rust`](https://github.com/godot-rust/gdext/tree/master/itest).
+The functionality of this crate is heavily inspired by the [internal tests of `godot-rust`](https://github.com/godot-rust/gdext/tree/master/itest), 
+and core portions of source code are borrowed from there. Big thanks to maintainers and contributors of `godot-rust`!
