@@ -311,6 +311,9 @@ impl RunnerConfig {
         if self.disallow_skip() {
             additional_message.push("disallowing skipping".to_owned());
         }
+        if self.ignore_keywords() {
+            additional_message.push("ignoring keywords".to_owned());
+        }
 
         if !additional_message.is_empty() {
             writer.println(&format!("{:^80}\n", additional_message.join(" & ")));

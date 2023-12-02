@@ -157,6 +157,7 @@ pub struct GdTestRunner {
     benches_summary: RunnerSummary,
     config: RunnerConfig,
     failed_list: Vec<String>,
+    began_run: bool,
     #[base]
     base: Base<Node>,
 }
@@ -176,13 +177,16 @@ impl INode for GdTestRunner {
             benches_summary: RunnerSummary::default(),
             config: RunnerConfig::default(),
             failed_list: Vec::new(),
+            began_run: false,
             base,
         }
     }
     // Needed for the physics to be initialized for the tests that needs them
     fn ready(&mut self) {
+        
         let mut scene_tree = self.base.get_tree().unwrap();
         scene_tree.connect("physics_frame".into(), self.base.callable("test_run"));
+        
     }
 }
 
@@ -190,6 +194,11 @@ impl INode for GdTestRunner {
 impl GdTestRunner {
     #[func]
     fn test_run(&mut self) {
+        if self.began_run {
+            return;
+        }
+
+        self.began_run = true;
         let start = Instant::now();
         let writer = MessageWriter::new();
 
@@ -282,13 +291,15 @@ impl GdTestRunner {
         self.end(outcome as i32);
     }
 
-    fn end(&self, exit_code: i32) {
+    fn end(&mut self, exit_code: i32) {
+        self.base.queue_free();
         self.base
             .get_tree()
             .unwrap()
             .quit_ex()
             .exit_code(exit_code)
             .done();
+            
     }
 
     fn run_rust_tests(&mut self, handler: &mut GdRustItests) {

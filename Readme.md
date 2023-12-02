@@ -27,8 +27,8 @@ or in the Godot console when executed from the editor. The output resembles the 
 
                               disallowing focused                               
 
-   Found 8 Rust tests in 1 files
-   Found 3 Rust benchmarks in 1 files
+   Found 6 Rust tests in 1 files
+   Found 2 Rust benchmarks in 1 files
 
 --------------------------------------------------------------------------------
    Running Rust tests
@@ -39,12 +39,10 @@ or in the Godot console when executed from the editor. The output resembles the 
    -- second_test ... ok!
    -- focused_test ... ok!
    -- skipped_test ... ~skipped~
-   -- test_with_ctx ... ok!
-   -- keyword_class_test ... ok!
    -- filter_me ... ok!
    -- filter_me_too ... ok!
 
-Test result: ok!. 7 passed; 0 failed, 1 skipped.
+Test result: ok!. 5 passed; 0 failed, 1 skipped.
   Time: 0.00s.
 
 --------------------------------------------------------------------------------
@@ -54,11 +52,10 @@ Test result: ok!. 7 passed; 0 failed, 1 skipped.
 
    bench.rs:
    -- skipped_bench              ...    ~skipped~
-   -- bench_with_ctx             ...      2.309μs      2.503μs
-   -- focused_bench              ...      0.014μs      0.014μs
+   -- focused_bench              ...      0.015μs      0.047μs
 
-Test result: ok!. 2 passed; 0 failed, 1 skipped.
-  Time: 0.23s.
+Test result: ok!. 1 passed; 0 failed, 1 skipped.
+  Time: 0.00s.
 
 = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
  = = = = = = = = = =             ! SUCCESS !               = = = = = = = = = =
