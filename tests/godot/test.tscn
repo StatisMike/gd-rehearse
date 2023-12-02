@@ -2,4 +2,3 @@
 
 [node name="GdTestRunner" type="GdTestRunner"]
 disallow_focus = true
-ignore_keywords = true
