@@ -183,10 +183,8 @@ impl INode for GdTestRunner {
     }
     // Needed for the physics to be initialized for the tests that needs them
     fn ready(&mut self) {
-        
         let mut scene_tree = self.base.get_tree().unwrap();
         scene_tree.connect("physics_frame".into(), self.base.callable("test_run"));
-        
     }
 }
 
@@ -288,7 +286,7 @@ impl GdTestRunner {
             "\n  Took total: {duration_mins}:{duration_secs:0>2}"
         ));
 
-        self.end(outcome as i32);
+        self.end(!outcome as i32);
     }
 
     fn end(&mut self, exit_code: i32) {
@@ -299,7 +297,6 @@ impl GdTestRunner {
             .quit_ex()
             .exit_code(exit_code)
             .done();
-            
     }
 
     fn run_rust_tests(&mut self, handler: &mut GdRustItests) {

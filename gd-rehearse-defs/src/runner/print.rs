@@ -12,14 +12,6 @@ use super::is_headless_run;
 
 use godot::log::godot_print;
 
-// Colors to use in terminal stdout.
-// const FMT_CYAN_BOLD: &str = "\x1b[36;1;1m";
-// const FMT_CYAN: &str = "\x1b[36m";
-// const FMT_GREEN: &str = "\x1b[32m";
-// const FMT_YELLOW: &str = "\x1b[33m";
-// const FMT_RED: &str = "\x1b[31m";
-// const FMT_END: &str = "\x1b[0m";
-
 pub(crate) struct MessageWriter {
     to_godot: bool,
 }
@@ -47,7 +39,7 @@ impl MessageWriter {
             "{hf}\n{hp}{h:^40}{hp}\n{hf}",
             hf = "-".repeat(80),
             hp = "-".repeat(20),
-            h = "Running godot-test"
+            h = "Running gd-rehearse"
         ));
     }
 

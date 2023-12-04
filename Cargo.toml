@@ -1,9 +1,9 @@
 [workspace]
 resolver = "2"
 members = [
-  "godot-test",
-  "godot-test_defs",
-  "godot-test_macros",
+  "gd-rehearse",
+  "gd-rehearse-defs",
+  "gd-rehearse-macros",
 
   # crate tests
   "tests/rust"

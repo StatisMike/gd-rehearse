@@ -15,7 +15,7 @@ pub(crate) const WARMUP_RUNS: usize = 200;
 pub(crate) const TEST_RUNS: usize = 501; // uneven, so median need not be interpolated.
 const METRIC_COUNT: usize = 2;
 
-godot::sys::plugin_registry!(pub GODOT_TEST_RUST_BENCHMARKS: RustBenchmark);
+godot::sys::plugin_registry!(pub GD_REHEARSE_RUST_BENCHMARKS: RustBenchmark);
 
 #[doc(hidden)]
 pub(crate) struct GdBenchmarks {
@@ -57,7 +57,7 @@ impl GdBenchmarks {
     }
 
     fn get_benchmark_from_registry() -> Option<RustBenchmark> {
-        __godot_rust_plugin_GODOT_TEST_RUST_BENCHMARKS
+        __godot_rust_plugin_GD_REHEARSE_RUST_BENCHMARKS
             .lock()
             .expect("couldn't retrieve RustBenchmark")
             .pop()
@@ -117,7 +117,7 @@ impl BenchResult {
     }
 
     pub fn success(times: Vec<Duration>) -> BenchResult {
-        // See top of file for rationale.
+        // Currently more metrics unused, as in `gdext/itest`
 
         /*let mean = {
             let total = times.iter().sum::<Duration>();

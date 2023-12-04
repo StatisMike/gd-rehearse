@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
-godot-test = { path = "../../godot-test" }
+gd-rehearse = { path = "../../gd-rehearse" }
 
 [package.metadata.docs.rs]
 license-file = "../License.txt"

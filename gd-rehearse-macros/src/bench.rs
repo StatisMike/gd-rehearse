@@ -104,7 +104,7 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
             return bad_signature(&func);
         }
     } else {
-        quote! { __unused_context: &::godot_test::CaseContext }
+        quote! { __unused_context: &::gd_rehearse::CaseContext }
     };
 
     let body = &func.body;
@@ -113,11 +113,11 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
         pub fn #bench_name(#param) {
             for _ in 0..#repeats {
                 let __ret: #ret = #body;
-                ::godot_test::bench::bench_used(__ret);
+                ::gd_rehearse::bench::bench_used(__ret);
             }
         }
 
-        ::godot::sys::plugin_add!{GODOT_TEST_RUST_BENCHMARKS in godot_test::bench; ::godot_test::bench::RustBenchmark {
+        ::godot::sys::plugin_add!{GD_REHEARSE_RUST_BENCHMARKS in gd_rehearse::bench; ::gd_rehearse::bench::RustBenchmark {
           name: #bench_name_str,
           focused: #focused,
           skipped: #skipped,
