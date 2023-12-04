@@ -5,9 +5,7 @@
 */
 
 use proc_macro::TokenStream;
-use proc_macro2::TokenStream as TokenStream2;
-use quote::{format_ident, quote};
-use venial::Declaration;
+use utils::translate_meta;
 
 mod bench;
 mod itest;
@@ -18,12 +16,12 @@ mod utils;
 ///
 /// Similar to `#[test]`, but converts the function into an integration test between Godot and Rust.
 ///
-/// It transforms and registers the annotated function for further usage by [`GdTestRunner`](godot_test_defs::runner::GdTestRunner)
+/// It transforms and registers the annotated function for further usage by [`GdTestRunner`](gd_rehearse_defs::runner::GdTestRunner)
 /// in some Godot test scene. When the runner enters the scene, it will run all qualified tests.
 ///
 /// A function annotated with `#[gditest]` needs to:
 /// - Have no return values.
-/// - Have no parameters or only a singular [`CaseContext`](godot_test_defs::cases::CaseContext).
+/// - Have no parameters or only a singular [`CaseContext`](gd_rehearse_defs::cases::CaseContext).
 ///
 /// ## Attributes
 /// An attribute-less macro will make the tests run, but some attributes are available for better customizability, especially when working
@@ -35,8 +33,8 @@ mod utils;
 ///
 /// ## Examples
 /// ```no_run
-/// use godot_test::CaseContext;
-/// use godot_test::itest::*;
+/// use gd_rehearse::CaseContext;
+/// use gd_rehearse::itest::*;
 ///
 /// // Causes a focus run during which only the focused tests will be executed, but only with
 /// // `my test` as a keyword in the runner.
@@ -65,12 +63,12 @@ pub fn gditest(meta: TokenStream, input: TokenStream) -> TokenStream {
 
 /// Benchmark for gdext classes and functions integrated with Godot.
 ///
-/// This macro transforms and registers the annotated function for further usage by [`GdTestRunner`](godot_test_defs::runner::GdTestRunner)
+/// This macro transforms and registers the annotated function for further usage by [`GdTestRunner`](gd_rehearse_defs::runner::GdTestRunner)
 /// within a Godot test scene. When the runner enters the scene, it executes all qualified benchmarks.
 ///
 /// A function annotated with `#[gdbench]` must:
 /// - Have a return value.
-/// - Have no parameters or only a singular [`CaseContext`](godot_test_defs::cases::CaseContext).
+/// - Have no parameters or only a singular [`CaseContext`](gd_rehearse_defs::cases::CaseContext).
 ///
 /// Every benchmark is executed 200 times for a *warm-up*, followed by 501 additional runs to assess runtime (an odd number of runs for easy
 /// median extraction). Minimum and median run times will be displayed.
@@ -86,8 +84,8 @@ pub fn gditest(meta: TokenStream, input: TokenStream) -> TokenStream {
 ///
 /// ## Examples
 /// ```no_run
-/// use godot_test::CaseContext;
-/// use godot_test::bench::*;
+/// use gd_rehearse::CaseContext;
+/// use gd_rehearse::bench::*;
 /// use godot::obj::InstanceId;
 ///
 /// // Causes a focus run during which only the focused benchmarks will be executed, but only with
@@ -112,30 +110,4 @@ pub fn gditest(meta: TokenStream, input: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn gdbench(meta: TokenStream, input: TokenStream) -> TokenStream {
     translate_meta("gdbench", meta, input, bench::attribute_bench)
-}
-
-fn translate_meta<F>(
-    self_name: &str,
-    meta: TokenStream,
-    input: TokenStream,
-    transform: F,
-) -> TokenStream
-where
-    F: FnOnce(Declaration) -> Result<TokenStream2, venial::Error>,
-{
-    let self_name = format_ident!("{}", self_name);
-    let input2 = TokenStream2::from(input);
-    let meta2 = TokenStream2::from(meta);
-
-    // Hack because venial doesn't support direct meta parsing yet
-    let input = quote! {
-        #[#self_name(#meta2)]
-        #input2
-    };
-
-    let result2 = venial::parse_declaration(input)
-        .and_then(transform)
-        .unwrap_or_else(|e| e.to_compile_error());
-
-    TokenStream::from(result2)
 }

@@ -1,0 +1,40 @@
+name: Crate tests
+
+on:
+  pull_request:
+    branches:
+      - master
+      - development
+
+jobs:
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-20.04
+    env: 
+      GODOT_BASE_URL: http://downloads.tuxfamily.org/godotengine/4.2
+      GODOT_BINARY: Godot_v4.2-stable_linux.x86_64
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v3
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run Rust tests
+        run: cargo test
+
+      - name: Download Godot
+        shell: bash
+        run: |
+          curl $GODOT_BASE_URL/$GODOT_BINARY.zip >> godot.zip
+          unzip godot.zip && rm godot.zip && chmod +x $GODOT_BINARY
+
+      - name: Build tests crate
+        shell: bash
+        run: cargo build -p tests
+        
+      - name: Run Godot integration tests
+        shell: bash
+        run: ./$GODOT_BINARY --path tests/godot --headless

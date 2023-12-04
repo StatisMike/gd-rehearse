@@ -6,8 +6,8 @@
 
 use godot::engine::Object;
 use godot::obj::Gd;
-use godot_test::itest::*;
-use godot_test::CaseContext;
+use gd_rehearse::itest::*;
+use gd_rehearse::CaseContext;
 
 #[gditest]
 fn simple_test() {

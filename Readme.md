@@ -1,12 +1,11 @@
-# godot-test
+# gd-rehearse
+
+>In the vibrant production of game development, testing serves as the ongoing rehearsals where every line of code steps onto the stage. Just as actors grasping for fame polish their performances before the grand opening night, game makers of all calibers should fine-tune their creation, ensuring a flawless gameplay experience when the curtain rises on the final release.
 
 This crate enhances the testing capabilities of [godot-rust](https://github.com/godot-rust/gdext) projects, enabling unit 
 and integration testing as well as benchmarking.
 
-When using the standard `#[test]` Rust macro in a Godot project, tests may fail if they involve objects requiring the Godot 
-executable to run. `godot-test` addresses this limitation by introducing the `#[gditest]` and `#[gdbench]` macros. These 
-can be used to annotate functions intended for testing or benchmarking your code, and the crate provides the `GdTestRunner` 
-for executing them within a Godot scene.
+When using the standard `#[test]` Rust macro in a gdextension project, tests will fail if they involve objects that require the Godot executable to run. `gd-rehearse` provides a suitable testing stage by introducing the `#[gditest]` and `#[gdbench]` macros. These can be used to annotate functions intended for testing or benchmarking your code, and the crate provides the GdTestRunner for executing them within a created Godot test scene.
 
 ## In Development
 
@@ -21,7 +20,7 @@ or in the Godot console when executed from the editor. The output resembles the 
 
 ```
 --------------------------------------------------------------------------------
---------------------           Running godot-test           --------------------
+--------------------           Running gd-rehearse           --------------------
 --------------------------------------------------------------------------------
                            Began run in HEADLESS mode                           
 
@@ -76,6 +75,12 @@ for additional information.
 
 > ⚠️ While running tests from the editor, if the full runner run is very short the output won't always get printed to Godot
 console.
+
+## GitHub CI hints
+
+To setup `gd-rehearse` in Github Actions, remember to include `.godot/extension_list.cfg` at minimal inside your Godot project. 
+Even though Godot 4+ includes whole `.godot` directory as ignored, without this file commandline Godot run won't be able to 
+find your `*.gdextension` file, thus not loading the `GdTestRunner`. 
 
 ## Note
 

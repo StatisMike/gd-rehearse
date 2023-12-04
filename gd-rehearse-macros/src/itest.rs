@@ -86,7 +86,7 @@ pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> 
             return bad_signature(&func);
         }
     } else {
-        quote! { __unused_context: &::godot_test::CaseContext }
+        quote! { __unused_context: &::gd_rehearse::CaseContext }
     };
 
     let body = &func.body;
@@ -96,7 +96,7 @@ pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> 
             #body
         }
 
-        ::godot::sys::plugin_add!(GODOT_TEST_RUST_TEST_CASES in godot_test::itest; ::godot_test::itest::RustTestCase {
+        ::godot::sys::plugin_add!(GD_REHEARSE_RUST_TEST_CASES in gd_rehearse::itest; ::gd_rehearse::itest::RustTestCase {
             name: #test_name_str,
             skipped: #skipped,
             focused: #focused,

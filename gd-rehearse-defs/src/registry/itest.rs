@@ -10,7 +10,7 @@ use crate::cases::rust_test_case::RustTestCase;
 use crate::cases::Case;
 use crate::runner::config::RunnerConfig;
 
-godot::sys::plugin_registry!(pub GODOT_TEST_RUST_TEST_CASES: RustTestCase);
+godot::sys::plugin_registry!(pub GD_REHEARSE_RUST_TEST_CASES: RustTestCase);
 
 #[doc(hidden)]
 pub(crate) struct GdRustItests {
@@ -56,7 +56,7 @@ impl GdRustItests {
     }
 
     fn get_rust_case() -> Option<RustTestCase> {
-        __godot_rust_plugin_GODOT_TEST_RUST_TEST_CASES
+        __godot_rust_plugin_GD_REHEARSE_RUST_TEST_CASES
             .lock()
             .expect("can't retrieve RustTestCase")
             .pop()

@@ -1,5 +1,5 @@
 [package]
-name = "godot-test"
+name = "gd-rehearse"
 version = "0.1.0"
 edition = "2021"
 license = "MPL-2.0"
@@ -9,8 +9,8 @@ categories = ["game-engines", "graphics", "test"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-godot-test_macros = { path = "../godot-test_macros"}
-godot-test_defs = { path = "../godot-test_defs"}
+gd-rehearse-macros = { path = "../gd-rehearse-macros"}
+gd-rehearse-defs = { path = "../gd-rehearse-defs"}
 # For direct link in documentation
 godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
 

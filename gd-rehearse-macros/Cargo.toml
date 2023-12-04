@@ -1,5 +1,5 @@
 [package]
-name = "godot-test_macros"
+name = "gd-rehearse-macros"
 version = "0.1.0"
 edition = "2021"
 license = "MPL-2.0"
@@ -8,11 +8,11 @@ license = "MPL-2.0"
 proc-macro = true
 
 [dev-dependencies]
-godot-test = { path="../godot-test" }
+gd-rehearse = { path="../gd-rehearse" }
 godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
 
 [dependencies]
-godot-test_defs = { path="../godot-test_defs" }
+gd-rehearse-defs = { path="../gd-rehearse-defs" }
 proc-macro2 = "1.0.63"
 quote = "1.0.29"
 venial = "0.5"
