@@ -77,7 +77,7 @@ impl RunnerSummary {
         };
 
         writer.println(&format!(
-            "\nTest result: {outcome}. {passed} passed; {failed} failed{extra}."
+            "\nTest result: {outcome} {passed} passed; {failed} failed{extra}."
         ));
         writer.println(&format!("  Time: {run_time:.2}s."));
 

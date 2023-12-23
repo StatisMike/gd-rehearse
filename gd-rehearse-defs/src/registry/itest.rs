@@ -85,7 +85,7 @@ impl GdRustItests {
 
         // Sort for deterministic run order: by file name and line number.
         self.tests
-            .sort_by(|a, b| format!("{}{}", b.file, b.line).cmp(&format!("{}{}", a.file, a.line)));
+            .sort_by(|a, b| format!("{}{}", b.file, b.line).cmp(&format!("{}{:05}", a.file, a.line)));
 
         self.files_count = all_files.len();
     }
