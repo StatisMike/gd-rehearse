@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"gd_rehearse_defs":[["impl Inherits&lt;Node&gt; for <a class=\"struct\" href=\"gd_rehearse_defs/runner/struct.GdTestRunner.html\" title=\"struct gd_rehearse_defs::runner::GdTestRunner\">GdTestRunner</a>"],["impl Inherits&lt;Object&gt; for <a class=\"struct\" href=\"gd_rehearse_defs/runner/struct.GdTestRunner.html\" title=\"struct gd_rehearse_defs::runner::GdTestRunner\">GdTestRunner</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

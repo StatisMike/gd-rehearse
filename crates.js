@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["gd_rehearse","gd_rehearse_defs","gd_rehearse_macros","tests"];
