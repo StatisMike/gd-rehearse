@@ -5,6 +5,7 @@
 */
 
 use godot::prelude::{godot_api, Base, GString, GodotClass, INode, Node, PackedStringArray};
+use godot::obj::WithBaseField;
 
 use crate::cases::rust_bench::RustBenchmark;
 use crate::cases::rust_test_case::RustTestCase;
@@ -183,8 +184,8 @@ impl INode for GdTestRunner {
     }
     // Needed for the physics to be initialized for the tests that needs them
     fn ready(&mut self) {
-        let mut scene_tree = self.base.get_tree().unwrap();
-        scene_tree.connect("physics_frame".into(), self.base.callable("test_run"));
+        let mut scene_tree = self.base().get_tree().unwrap();
+        scene_tree.connect("physics_frame".into(), self.base().callable("test_run"));
     }
 }
 
@@ -290,8 +291,8 @@ impl GdTestRunner {
     }
 
     fn end(&mut self, exit_code: i32) {
-        self.base.queue_free();
-        self.base
+        self.base_mut().queue_free();
+        self.base()
             .get_tree()
             .unwrap()
             .quit_ex()
@@ -301,7 +302,7 @@ impl GdTestRunner {
 
     fn run_rust_tests(&mut self, handler: &mut GdRustItests) {
         let ctx = CaseContext {
-            scene_tree: self.base.clone().upcast(),
+            scene_tree: self.base().clone(),
         };
 
         let writer = MessageWriter::new();
@@ -332,7 +333,7 @@ impl GdTestRunner {
 
     fn run_rust_benchmarks(&mut self, benchmarks: &mut GdBenchmarks) {
         let ctx = CaseContext {
-            scene_tree: self.base.clone().upcast(),
+            scene_tree: self.base().clone(),
         };
 
         let writer = MessageWriter::new();
