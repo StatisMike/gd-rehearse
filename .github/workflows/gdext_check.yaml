@@ -1,0 +1,25 @@
+name: gdext-check
+on: 
+  schedule:
+   - cron: "23 06 * * *"
+jobs:
+  gdext-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if gdext updated recently
+      - id: check
+      - run: |
+          curled=$(curl -s https://api.github.com/repos/godot-rust/gdext/commits/heads/master)
+          changed=$(echo $curled | jq -r "((now - (.commit.author.date | fromdateiso8601)) / (60*60*24) | trunc)")
+          echo "::set-output name=changed::${changed}"
+
+    steps:
+      - name: Run tests
+      - if: steps.check.outputs.changed == '0'
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.everest-preview+json" \
+            -H "Content-Type: application/json" \
+            https://api.github.com/repos/StatisMike/gd-rehearse/actions/workflows/78299779/dispatches \
+            --data '{"ref":"master"}'
