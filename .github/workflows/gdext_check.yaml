@@ -13,9 +13,9 @@ jobs:
         run: |
           curled=$(curl -s https://api.github.com/repos/godot-rust/gdext/commits/heads/master)
           changed=$(echo $curled | jq -r "((now - (.commit.author.date | fromdateiso8601)) / (60*60*24) | trunc)")
-          echo "::set-output name=changed::${changed}"
+          echo "GDEXT_CHANGED=${changed}" >> $GITHUB_ENV
 
-      - if: steps.check.outputs.changed == '0'
+      - if: ${{ env.GDEXT_CHANGED }} == '0'
         run: |
           curl -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
