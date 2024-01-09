@@ -1,9 +1,8 @@
 name: gdext-latest-success
 on: 
     workflow_run:
-    workflows: [Crate tests]
-    types:
-      - completed
+      workflows: [Crate tests]
+      types: [completed]
 
 jobs:
   gdext-check:
