@@ -16,6 +16,7 @@ jobs:
     env: 
       GODOT_BASE_URL: http://downloads.tuxfamily.org/godotengine/4.2
       GODOT_BINARY: Godot_v4.2-stable_linux.x86_64
+      SHORT_SHA: error
 
     steps:
       - name: Checkout sources
@@ -48,7 +49,7 @@ jobs:
         shell: bash
         run: ./$GODOT_BINARY --path tests/godot --headless
 
-      - if: github.ref == 'ref/head/master'
+      - if: github.ref == 'ref/heads/master'
         name: gdext Commit badge
         uses: RubbaBoy/BYOB@v1.3.0
         with:
