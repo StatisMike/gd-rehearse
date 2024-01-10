@@ -24,6 +24,13 @@ jobs:
       - name: Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Get gdext latest commit
+        id: gdext_commit
+        shell: bash
+        run: |
+          sha=$(curl -s https://api.github.com/repos/godot-rust/gdext/commits/heads/master | jq -r ".sha")
+          echo "SHORT_SHA=${sha:0:10}" >> $GITHUB_ENV
+
       - name: Run Rust tests
         run: cargo test
 
@@ -40,3 +47,13 @@ jobs:
       - name: Run Godot integration tests
         shell: bash
         run: ./$GODOT_BINARY --path tests/godot --headless
+
+      - if: github.ref == 'ref/head/master'
+        name: gdext Commit badge
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          NAME: gdext_latest_success
+          LABEL: 'Latest compatible gdext'
+          STATUS: ${{ env.SHORT_SHA }}
+          COLOR: 148f07
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
