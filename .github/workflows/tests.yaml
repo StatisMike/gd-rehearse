@@ -5,6 +5,9 @@ on:
     branches:
       - master
       - development
+  push:
+    branches:
+      - master
       
   workflow_dispatch:
 
@@ -49,7 +52,7 @@ jobs:
         shell: bash
         run: ./$GODOT_BINARY --path tests/godot --headless
 
-      - if: github.ref == 'ref/heads/master'
+      - if: github.ref == 'refs/heads/master'
         name: gdext Commit badge
         uses: RubbaBoy/BYOB@v1.3.0
         with:
