@@ -8,6 +8,8 @@ on:
 jobs:
   gdext-check:
     runs-on: ubuntu-latest
+    env:
+      GDEXT_CHANGED: 0
     steps:
       - id: check
         run: |
