@@ -1,8 +1,12 @@
 name: gdext-latest-success
 on: 
-    workflow_run:
-      workflows: [Crate tests]
-      types: [completed]
+  workflow_run:
+    workflows:
+      - Crate tests
+    types: 
+      - completed
+    branches: 
+      - master
 
 jobs:
   gdext-check:
@@ -14,13 +18,13 @@ jobs:
         shell: bash
         run: |
           sha=$(curl -s https://api.github.com/repos/godot-rust/gdext/commits/heads/master | jq -r ".sha")
-          echo "::set-output name=sha::${sha:0:10}"
+          echo "SHORT_SHA=${sha:0:10}" >> $GITHUB_ENV
 
       - name: gdext Commit badge
         uses: RubbaBoy/BYOB@v1.3.0
         with:
           NAME: gdext_latest_success
           LABEL: 'Latest compatible gdext'
-          STATUS: ${{ steps.gdext_commit.outputs.sha }}
-          COLOR: gold
+          STATUS: ${{ env.SHORT_SHA }}
+          COLOR: E9D105
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
