@@ -2,7 +2,7 @@ name: gdext-latest-success
 on: 
   workflow_run:
     workflows:
-      - Crate tests
+      - "Crate tests"
     types: 
       - completed
     branches: 
