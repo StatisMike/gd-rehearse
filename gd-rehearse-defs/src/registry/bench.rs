@@ -4,12 +4,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-use std::collections::HashSet;
 use std::time::Duration;
 
 use crate::cases::rust_bench::RustBenchmark;
-use crate::cases::{Case, CaseOutcome};
+use crate::cases::CaseOutcome;
 use crate::runner::config::RunnerConfig;
+
+use super::CaseFilterer;
 
 pub(crate) const WARMUP_RUNS: usize = 200;
 pub(crate) const TEST_RUNS: usize = 501; // uneven, so median need not be interpolated.
@@ -22,6 +23,7 @@ pub(crate) struct GdBenchmarks {
     benches: Vec<RustBenchmark>,
     files_count: usize,
     is_focus_run: bool,
+    is_path_run: bool,
 }
 
 impl GdBenchmarks {
@@ -33,14 +35,16 @@ impl GdBenchmarks {
         self.files_count
     }
 
-    pub(crate) fn init(config: &RunnerConfig, is_focus_run: bool) -> Self {
+    pub(crate) fn init(config: &RunnerConfig) -> Self {
         let mut instance = Self {
             benches: Vec::new(),
             files_count: 0,
-            is_focus_run,
+            is_focus_run: false,
+            is_path_run: false,
         };
 
-        instance.collect_rust_benchmarks(config);
+        instance.collect_rust_benchmarks();
+        instance.is_path_run = instance.is_any_path_eq(config.scene_path()) || instance.is_path_run;
         instance
     }
 
@@ -63,32 +67,15 @@ impl GdBenchmarks {
             .pop()
     }
 
-    fn collect_rust_benchmarks(&mut self, config: &RunnerConfig) {
-        let mut all_files = HashSet::new();
-
+    fn collect_rust_benchmarks(&mut self) {
         while let Some(bench) = Self::get_benchmark_from_registry() {
-            // Collect only benches based on keyword. If keyword in runner is empty, all will pass this check
-            if bench.should_run_keyword(config.keyword(), config.ignore_keywords()) {
-                if !self.is_focus_run && bench.is_case_focus() && !config.disallow_focus() {
-                    self.benches.clear();
-                    all_files.clear();
-                    self.is_focus_run = true;
-                }
-
-                if (!self.is_focus_run && bench.should_run_filters(config.filters()))
-                    || bench.should_run_focus(config.disallow_focus())
-                {
-                    all_files.insert(bench.file);
-                    self.benches.push(bench);
-                }
-            }
+            self.benches.push(bench);
         }
+    }
 
-        // Sort for deterministic run order: by file name and line number.
-        self.benches
-            .sort_by(|a, b| format!("{}{}", b.file, b.line).cmp(&format!("{}{:05}", a.file, a.line)));
-
-        self.files_count = all_files.len();
+    pub fn finish_setup(&mut self) {
+        self.sort_cases();
+        self.files_count = self.get_files_count()
     }
 }
 
@@ -143,5 +130,26 @@ impl BenchResult {
             outcome: CaseOutcome::Passed,
             stats: [min, median],
         }
+    }
+}
+
+impl CaseFilterer<RustBenchmark> for GdBenchmarks {
+    fn is_path_run(&self) -> bool {
+        self.is_path_run
+    }
+    fn set_path_run(&mut self, is_path_run: bool) {
+        self.is_path_run = is_path_run
+    }
+    fn is_focus_run(&self) -> bool {
+        self.is_focus_run
+    }
+    fn set_focus_run(&mut self, is_focus_run: bool) {
+        self.is_focus_run = is_focus_run
+    }
+    fn get_cases(&self) -> &Vec<RustBenchmark> {
+        &self.benches
+    }
+    fn get_cases_mut(&mut self) -> &mut Vec<RustBenchmark> {
+        &mut self.benches
     }
 }

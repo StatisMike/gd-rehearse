@@ -18,6 +18,7 @@ pub struct RustTestCase {
     pub focused: bool,
     /// Used in conjuction with set
     pub keyword: Option<&'static str>,
+    pub scene_path: Option<&'static str>,
     #[allow(dead_code)]
     pub line: u32,
     pub function: fn(&CaseContext),
@@ -38,5 +39,11 @@ impl Case for RustTestCase {
     }
     fn get_case_keyword(&self) -> &Option<&str> {
         &self.keyword
+    }
+    fn get_case_scene_path(&self) -> &Option<&str> {
+        &self.scene_path
+    }
+    fn get_case_line(&self) -> u32 {
+        self.line
     }
 }

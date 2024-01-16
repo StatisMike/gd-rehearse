@@ -30,6 +30,7 @@ mod utils;
 /// - `skip`: Skips the test during run.
 /// - `focus`: Forces focus run, in which only tests annotated with `focus` will be run.
 /// - `keyword`: A specific keyword that will be picked up by the runner, and the test will be run only if the runner has the same keyword specified.
+/// - `scene_path`: Godot path to the scene. If specified, given benchmark will only run if runner's scene path is the same.
 ///
 /// ## Examples
 /// ```no_run
@@ -53,8 +54,16 @@ mod utils;
 /// // Can access the `GdTestRunner` scene_tree.
 /// #[gditest]
 /// fn test_with_ctx(ctx: &CaseContext) {
-///     ctx.scene_tree.instance_id();
+///     ctx.scene_tree().instance_id();
 /// }
+///
+/// // Will only run in `res://special_cases.tscn` scene.
+/// #[gditest(scene_path="res://special_cases.tscn")]
+/// fn test_with_path(ctx: &CaseContext) {
+///     let test_node = ctx.scene_tree().get_node("SomeTestNode".into());
+///     assert!(test_node.is_some());
+///     assert!(!test_node.unwrap().get("property_should_be_here".into()).is_nil());
+/// }  
 /// ```
 #[proc_macro_attribute]
 pub fn gditest(meta: TokenStream, input: TokenStream) -> TokenStream {
@@ -80,6 +89,7 @@ pub fn gditest(meta: TokenStream, input: TokenStream) -> TokenStream {
 /// - `skip`: Skips the benchmark during execution.
 /// - `focus`: Forces a focused run, in which only benchmarks annotated with `focus` will be executed.
 /// - `keyword`: A specific keyword that will be picked up by the runner. The benchmark runs only if the runner has the same keyword specified.
+/// - `scene_path`: Godot path to the scene. If specified, given benchmark will only run if runner's scene path is the same.
 /// - `repeat`: Specifies the number of internal repeats the benchmark should undergo. By default, the function executes 100 times within every run.
 ///
 /// ## Examples
@@ -87,6 +97,7 @@ pub fn gditest(meta: TokenStream, input: TokenStream) -> TokenStream {
 /// use gd_rehearse::CaseContext;
 /// use gd_rehearse::bench::*;
 /// use godot::obj::InstanceId;
+/// use godot::builtin::Variant;
 ///
 /// // Causes a focus run during which only the focused benchmarks will be executed, but only with
 /// // `my bench` as a keyword in the runner.
@@ -104,8 +115,17 @@ pub fn gditest(meta: TokenStream, input: TokenStream) -> TokenStream {
 /// // Can access the `GdTestRunner` scene_tree.
 /// #[gdbench]
 /// fn bench_with_ctx(ctx: &CaseContext) -> InstanceId {
-///     ctx.scene_tree.instance_id()
+///     ctx.scene_tree().instance_id()
 /// }
+/// 
+/// // Will only run in `res://special_cases.tscn` scene.
+/// #[gdbench(scene_path="res://special_cases.tscn")]
+/// fn bench_with_path(ctx: &CaseContext) -> Variant {
+///     let test_node = ctx.scene_tree().get_node("SomeTestNode".into()).expect("Can't get node");
+///     let variant = test_node.get("property_should_be_here".into());
+///     assert!(!variant.is_nil());
+///     variant
+/// } 
 /// ```
 #[proc_macro_attribute]
 pub fn gdbench(meta: TokenStream, input: TokenStream) -> TokenStream {

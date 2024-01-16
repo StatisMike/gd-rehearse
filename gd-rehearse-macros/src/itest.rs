@@ -29,6 +29,7 @@ pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> 
     let mut skipped = false;
     let mut focused = false;
     let mut keyword = quote! { None };
+    let mut scene_path = quote! { None };
 
     let mut parser =
         AttributeValueParser::from_attribute_group_at_path(&func.attributes, "gditest")?;
@@ -37,6 +38,7 @@ pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> 
         AttributeIdent::Focus,
         AttributeIdent::Skip,
         AttributeIdent::Keyword,
+        AttributeIdent::ScenePath,
     ])? {
         match ident {
             AttributeIdent::Focus => {
@@ -52,6 +54,11 @@ pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> 
                 let keyword_literal = parser.get_literal()?;
                 keyword = quote! { Some(#keyword_literal) };
                 parser.progress_puct();
+            }
+            AttributeIdent::ScenePath => {
+                parser.pop_equal_sign()?;
+                let scene_path_lit = parser.get_literal_scene_path()?;
+                scene_path = quote! { Some( #scene_path_lit ) }
             }
             _ => unreachable!(),
         }
@@ -104,6 +111,7 @@ pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> 
             file: std::file!(),
             line: std::line!(),
             function: #test_name,
+            scene_path: #scene_path
         });
     })
 }

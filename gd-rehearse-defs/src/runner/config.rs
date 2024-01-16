@@ -193,6 +193,7 @@ pub(crate) struct RunnerConfig {
     run_rust_benchmarks: bool,
     keyword: String,
     ignore_keywords: bool,
+    scene_path: String,
     filters: Vec<String>,
 }
 
@@ -225,6 +226,11 @@ impl RunnerConfig {
         self.run_rust_benchmarks
     }
 
+    pub fn scene_path(&self) -> &str {
+        &self.scene_path
+    }
+
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         disallow_focus: bool,
         disallow_skip: bool,
@@ -232,6 +238,7 @@ impl RunnerConfig {
         run_rust_benchmarks: bool,
         keyword: &GString,
         ignore_keywords: bool,
+        scene_path: String,
         filters: &PackedStringArray,
     ) -> Result<Self, ConfigError> {
         let keyword = keyword.to_string();
@@ -248,6 +255,7 @@ impl RunnerConfig {
             run_rust_benchmarks,
             ignore_keywords,
             keyword,
+            scene_path,
             filters,
         };
 
@@ -296,9 +304,15 @@ impl RunnerConfig {
         let writer = MessageWriter::new();
 
         if is_headless_run() {
-            writer.println(&format!("{:^80}\n", "Began run in HEADLESS mode"));
+            writer.println(&format!(
+                "{:^80}\n",
+                format!("Began run in HEADLESS mode in scene: {}", &self.scene_path)
+            ));
         } else {
-            writer.println(&format!("{:^80}\n", "Began run in EDITOR mode"));
+            writer.println(&format!(
+                "{:^80}\n",
+                format!("Began run in EDITOR mode in scene: {}", &self.scene_path)
+            ));
         }
 
         let mut additional_message = Vec::new();

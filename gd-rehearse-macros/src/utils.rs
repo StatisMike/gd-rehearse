@@ -7,7 +7,7 @@
 
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
-use quote::{quote, format_ident};
+use quote::{format_ident, quote};
 use venial::Declaration;
 
 pub fn bail_fn<R, T>(msg: impl AsRef<str>, tokens: T) -> Result<R, venial::Error>
@@ -60,4 +60,3 @@ where
 
     TokenStream::from(result2)
 }
-

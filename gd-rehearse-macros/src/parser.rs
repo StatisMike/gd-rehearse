@@ -18,6 +18,7 @@ pub enum AttributeIdent {
     Focus,
     Skip,
     Keyword,
+    ScenePath,
 }
 
 impl AttributeIdent {
@@ -27,6 +28,7 @@ impl AttributeIdent {
             "focus" => Some(Self::Focus),
             "skip" => Some(Self::Skip),
             "keyword" => Some(Self::Keyword),
+            "scene_path" => Some(Self::ScenePath),
             _ => None,
         }
     }
@@ -37,6 +39,7 @@ impl AttributeIdent {
             AttributeIdent::Focus => "focus".to_owned(),
             AttributeIdent::Skip => "skip".to_owned(),
             AttributeIdent::Keyword => "keyword".to_owned(),
+            AttributeIdent::ScenePath => "scene_path".to_owned(),
         }
     }
 
@@ -130,5 +133,17 @@ impl AttributeValueParser {
         if let Some(TokenTree::Punct(_punct)) = self.tokens.front() {
             _ = self.tokens.pop_front();
         }
+    }
+    pub fn get_literal_scene_path(&mut self) -> Result<Literal, venial::Error> {
+        let literal = self.get_literal()?;
+        let literal_as_str = &literal.to_string();
+        let start_correct = literal_as_str.starts_with("\"res://");
+        let end_correct = literal_as_str.ends_with(".tscn\"");
+        if start_correct && end_correct {
+            return Ok(literal);
+        }
+        Err(venial::Error::new(
+            "`scene_path` needs to start with `res://` and end with `.tscn`",
+        ))
     }
 }
