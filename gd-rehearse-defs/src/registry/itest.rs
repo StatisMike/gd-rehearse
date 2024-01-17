@@ -4,11 +4,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-use std::collections::HashSet;
-
 use crate::cases::rust_test_case::RustTestCase;
-use crate::cases::Case;
 use crate::runner::config::RunnerConfig;
+
+use super::CaseFilterer;
 
 godot::sys::plugin_registry!(pub GD_REHEARSE_RUST_TEST_CASES: RustTestCase);
 
@@ -17,6 +16,7 @@ pub(crate) struct GdRustItests {
     tests: Vec<RustTestCase>,
     files_count: usize,
     is_focus_run: bool,
+    is_path_run: bool,
 }
 
 impl GdRustItests {
@@ -32,18 +32,17 @@ impl GdRustItests {
         self.files_count
     }
 
-    pub fn is_focus_run(&self) -> bool {
-        self.is_focus_run
-    }
-
-    pub(crate) fn init(config: &RunnerConfig, is_focus_run: bool) -> Self {
+    pub(crate) fn init(config: &RunnerConfig) -> Self {
         let mut instance = Self {
             tests: Vec::new(),
             files_count: 0,
-            is_focus_run,
+            is_focus_run: false,
+            is_path_run: false,
         };
 
-        instance.collect_rust_tests(config);
+        instance.collect_rust_tests();
+        instance.is_path_run = instance.is_any_path_eq(config.scene_path()) || instance.is_path_run;
+
         instance
     }
 
@@ -62,31 +61,35 @@ impl GdRustItests {
             .pop()
     }
 
-    fn collect_rust_tests(&mut self, config: &RunnerConfig) {
-        let mut all_files = HashSet::new();
-
+    fn collect_rust_tests(&mut self) {
         while let Some(test) = Self::get_rust_case() {
-            // Collect only tests based on keyword. If keyword in runner is empty, all will pass this check
-            if test.should_run_keyword(config.keyword(), config.ignore_keywords()) {
-                if !self.is_focus_run && test.is_case_focus() && !config.disallow_focus() {
-                    self.tests.clear();
-                    all_files.clear();
-                    self.is_focus_run = true;
-                }
-
-                if (!self.is_focus_run && test.should_run_filters(config.filters()))
-                    || test.should_run_focus(config.disallow_focus())
-                {
-                    all_files.insert(test.file);
-                    self.tests.push(test);
-                }
-            }
+            self.tests.push(test);
         }
+    }
 
-        // Sort for deterministic run order: by file name and line number.
-        self.tests
-            .sort_by(|a, b| format!("{}{}", b.file, b.line).cmp(&format!("{}{:05}", a.file, a.line)));
+    pub fn finish_setup(&mut self) {
+        self.sort_cases();
+        self.files_count = self.get_files_count()
+    }
+}
 
-        self.files_count = all_files.len();
+impl CaseFilterer<RustTestCase> for GdRustItests {
+    fn is_path_run(&self) -> bool {
+        self.is_path_run
+    }
+    fn set_path_run(&mut self, is_path_run: bool) {
+        self.is_path_run = is_path_run
+    }
+    fn is_focus_run(&self) -> bool {
+        self.is_focus_run
+    }
+    fn set_focus_run(&mut self, is_focus_run: bool) {
+        self.is_focus_run = is_focus_run
+    }
+    fn get_cases(&self) -> &Vec<RustTestCase> {
+        &self.tests
+    }
+    fn get_cases_mut(&mut self) -> &mut Vec<RustTestCase> {
+        &mut self.tests
     }
 }

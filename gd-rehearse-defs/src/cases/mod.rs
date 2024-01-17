@@ -8,6 +8,8 @@ pub mod gd_test_case;
 pub mod rust_bench;
 pub mod rust_test_case;
 
+use std::cmp::Ordering;
+
 use godot::engine::{Engine, Node};
 use godot::obj::Gd;
 
@@ -15,7 +17,13 @@ use godot::obj::Gd;
 ///
 /// Currently it allows only to access [GdTestRunner](crate::runner::GdTestRunner) scene tree during tests and benchmarking.
 pub struct CaseContext {
-    pub scene_tree: Gd<Node>,
+    pub(crate) scene_tree: Gd<Node>,
+}
+
+impl CaseContext {
+    pub fn scene_tree(&self) -> &Gd<Node> {
+        &self.scene_tree
+    }
 }
 
 /// Case outcome.
@@ -62,10 +70,20 @@ pub(crate) trait Case {
     fn is_case_skip(&self) -> bool;
     fn get_case_keyword(&self) -> &Option<&str>;
     fn get_case_name(&self) -> &str;
+    fn get_case_line(&self) -> u32;
     fn get_case_file(&self) -> &str;
+    fn get_case_scene_path(&self) -> &Option<&str>;
 
-    fn should_run_focus(&self, disallow_focus: bool) -> bool {
-        self.is_case_focus() && !disallow_focus
+    fn order(first: &Self, other: &Self) -> Ordering {
+        other.get_order_string().cmp(&first.get_order_string())
+    }
+
+    fn get_order_string(&self) -> String {
+        format!("{}{:06}", self.get_case_file(), self.get_case_line())
+    }
+
+    fn should_run_focus(&self, is_focus_run: bool) -> bool {
+        !is_focus_run || self.is_case_focus()
     }
 
     fn should_run_skip(&self, disallow_skip: bool) -> bool {
@@ -91,5 +109,19 @@ pub(crate) trait Case {
         filters
             .iter()
             .any(|filter| self.get_case_name().contains(filter))
+    }
+
+    fn should_run_scene_path(&self, scene_path: &str, is_path_run: bool) -> bool {
+        if !is_path_run {
+            return self.get_case_scene_path().is_none();
+        }
+        self.scene_path_eq(scene_path)
+    }
+
+    fn scene_path_eq(&self, scene_path: &str) -> bool {
+        if let Some(path) = self.get_case_scene_path() {
+            return *path == scene_path;
+        }
+        false
     }
 }

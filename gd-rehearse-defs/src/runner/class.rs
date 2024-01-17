@@ -4,8 +4,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-use godot::prelude::{godot_api, Base, GString, GodotClass, INode, Node, PackedStringArray};
 use godot::obj::WithBaseField;
+use godot::prelude::{godot_api, Base, GString, GodotClass, INode, Node, PackedStringArray};
 
 use crate::cases::rust_bench::RustBenchmark;
 use crate::cases::rust_test_case::RustTestCase;
@@ -13,6 +13,7 @@ use crate::cases::{Case, CaseContext, CaseOutcome};
 
 use crate::registry::bench::{BenchResult, GdBenchmarks};
 use crate::registry::itest::GdRustItests;
+use crate::registry::CaseFilterer;
 
 use super::config::RunnerConfig;
 use super::extract_file_subtitle;
@@ -197,6 +198,8 @@ impl GdTestRunner {
             return;
         }
 
+        let path = self.base().get_scene_file_path().to_string();
+
         self.began_run = true;
         let start = Instant::now();
         let writer = MessageWriter::new();
@@ -208,6 +211,7 @@ impl GdTestRunner {
             self.run_benchmarks,
             &self.test_keyword,
             self.ignore_keywords,
+            path,
             &self.test_filters,
         ) {
             Ok(config) => self.config = config,
@@ -229,19 +233,47 @@ impl GdTestRunner {
         let mut rust_bench_handler: Option<GdBenchmarks> = None;
 
         let mut is_focus_run = false;
+        let mut is_path_run = false;
 
-        // Gather tests and benches to run based on the config.
+        // Gather tests and benches.
         if self.config.run_rust_tests() {
-            let handler = GdRustItests::init(&self.config, is_focus_run);
-            writer.println(&handler.get_post_init_summary());
-            is_focus_run = handler.is_focus_run();
+            let handler = GdRustItests::init(&self.config);
+            is_path_run = handler.is_path_run();
             rust_tests_handler = Some(handler);
         }
 
         if self.config.run_rust_benchmarks() {
-            let handler = GdBenchmarks::init(&self.config, is_focus_run);
-            writer.println(&handler.get_post_init_summary());
+            let handler = GdBenchmarks::init(&self.config);
+            is_path_run = handler.is_path_run() || is_path_run;
             rust_bench_handler = Some(handler);
+        }
+
+        // Filter tests and benches on path and focus
+        if let Some(handler) = &mut rust_tests_handler {
+            // handler.set_path_run(is_path_run);
+            handler.filter_path_keyword(&self.config);
+            is_path_run = handler.is_path_run();
+        }
+        if let Some(handler) = &mut rust_bench_handler {
+            handler.set_path_run(is_path_run);
+            handler.filter_path_keyword(&self.config);
+            // is_path_run = handler.is_path_run();
+        }
+
+        // Filter tests and benches on focus and filter
+        if let Some(handler) = &mut rust_tests_handler {
+            handler.set_focus_run(is_focus_run);
+            handler.filter_focus_filters(&self.config);
+            is_focus_run = handler.is_focus_run();
+            handler.finish_setup();
+            writer.println(&handler.get_post_init_summary());
+        }
+        if let Some(handler) = &mut rust_bench_handler {
+            handler.set_focus_run(is_focus_run);
+            handler.filter_focus_filters(&self.config);
+            handler.finish_setup();
+            // is_focus_run = handler.is_focus_run();
+            writer.println(&handler.get_post_init_summary());
         }
 
         // Run Rust Tests.

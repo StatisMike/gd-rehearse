@@ -16,6 +16,7 @@ pub struct RustBenchmark {
     pub skipped: bool,
     pub focused: bool,
     pub keyword: Option<&'static str>,
+    pub scene_path: Option<&'static str>,
     #[allow(dead_code)]
     pub line: u32,
     pub function: fn(&CaseContext),
@@ -37,6 +38,12 @@ impl Case for RustBenchmark {
     }
     fn get_case_keyword(&self) -> &Option<&str> {
         &self.keyword
+    }
+    fn get_case_scene_path(&self) -> &Option<&str> {
+        &self.scene_path
+    }
+    fn get_case_line(&self) -> u32 {
+        self.line
     }
 }
 

@@ -48,16 +48,20 @@ jobs:
         shell: bash
         run: cargo build -p tests
         
-      - name: Run Godot integration tests
+      - name: Run Godot integration tests - main scene
         shell: bash
         run: ./$GODOT_BINARY --path tests/godot --headless
+
+      - name: Run Godot integration tests - specific scene
+        shell: bash
+        run: ./$GODOT_BINARY --path tests/godot res://with_path.tscn --headless
 
       - if: github.ref == 'refs/heads/master'
         name: gdext Commit badge
         uses: RubbaBoy/BYOB@v1.3.0
         with:
-          NAME: gdext_latest_success
-          LABEL: 'Latest compatible gdext'
-          STATUS: ${{ env.SHORT_SHA }}
-          COLOR: 148f07
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: gdext_latest_success
+          label: 'Latest compatible gdext'
+          status: ${{ env.SHORT_SHA }}
+          color: 148f07
+          github_token: ${{ secrets.GITHUB_TOKEN }}

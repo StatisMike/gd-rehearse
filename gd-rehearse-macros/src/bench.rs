@@ -37,6 +37,7 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
     let mut focused = false;
     let mut skipped = false;
     let mut keyword = quote! { None };
+    let mut scene_path = quote! { None };
 
     let mut parser =
         AttributeValueParser::from_attribute_group_at_path(&func.attributes, "gdbench")?;
@@ -46,6 +47,7 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
         AttributeIdent::Skip,
         AttributeIdent::Repeat,
         AttributeIdent::Keyword,
+        AttributeIdent::ScenePath,
     ])? {
         match ident {
             AttributeIdent::Repeat => {
@@ -69,6 +71,12 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
                 parser.pop_equal_sign()?;
                 let keyword_lit = parser.get_literal()?;
                 keyword = quote! { Some( #keyword_lit ) };
+                parser.progress_puct();
+            }
+            AttributeIdent::ScenePath => {
+                parser.pop_equal_sign()?;
+                let scene_path_lit = parser.get_literal_scene_path()?;
+                scene_path = quote! { Some( #scene_path_lit ) };
                 parser.progress_puct();
             }
         }
@@ -126,6 +134,7 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
           line: std::line!(),
           function: #bench_name,
           repetitions: #repeats,
+          scene_path: #scene_path
         }}
     })
 }
