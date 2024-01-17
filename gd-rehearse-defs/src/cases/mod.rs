@@ -112,8 +112,8 @@ pub(crate) trait Case {
     }
 
     fn should_run_scene_path(&self, scene_path: &str, is_path_run: bool) -> bool {
-        if !is_path_run {
-            return self.get_case_scene_path().is_none();
+        if !is_path_run && self.get_case_scene_path().is_none(){
+            return true;
         }
         self.scene_path_eq(scene_path)
     }

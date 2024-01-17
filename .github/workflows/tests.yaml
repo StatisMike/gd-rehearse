@@ -54,7 +54,7 @@ jobs:
 
       - name: Run Godot integration tests - specific scene
         shell: bash
-        run: ./$GODOT_BINARY --path tests/godot res://with_path.tscn --headless
+        run: ./$GODOT_BINARY --path tests/godot res://with_path.tscn --headless -- --disallow-skip --only-scene-path
 
       - if: github.ref == 'refs/heads/master'
         name: gdext Commit badge

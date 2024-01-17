@@ -121,6 +121,7 @@ impl RunnerSummary {
 /// - `disallow_skip`: If set, the `skip` attribute of tests and benchmarks will be ignored.
 /// - `test_filters`: An array of strings tested against the names of tests and benchmarks. Those with names containing at least one of the specified
 ///    filters will be executed.
+/// - `only_scene_path`: If `true`, runner will execute only tests for its scene path specified in their `scene_path` attribute.
 ///
 /// ## Command Line Arguments
 ///
@@ -155,6 +156,8 @@ pub struct GdTestRunner {
     ignore_keywords: bool,
     #[export]
     test_filters: PackedStringArray,
+    #[export]
+    only_scene_path: bool,
     tests_summary: RunnerSummary,
     benches_summary: RunnerSummary,
     config: RunnerConfig,
@@ -175,6 +178,7 @@ impl INode for GdTestRunner {
             ignore_keywords: false,
             run_benchmarks: true,
             run_tests: true,
+            only_scene_path: false,
             tests_summary: RunnerSummary::default(),
             benches_summary: RunnerSummary::default(),
             config: RunnerConfig::default(),
@@ -211,6 +215,7 @@ impl GdTestRunner {
             self.run_benchmarks,
             &self.test_keyword,
             self.ignore_keywords,
+            self.only_scene_path,
             path,
             &self.test_filters,
         ) {
@@ -233,31 +238,24 @@ impl GdTestRunner {
         let mut rust_bench_handler: Option<GdBenchmarks> = None;
 
         let mut is_focus_run = false;
-        let mut is_path_run = false;
 
         // Gather tests and benches.
         if self.config.run_rust_tests() {
-            let handler = GdRustItests::init(&self.config);
-            is_path_run = handler.is_path_run();
+            let handler = GdRustItests::init();
             rust_tests_handler = Some(handler);
         }
 
         if self.config.run_rust_benchmarks() {
-            let handler = GdBenchmarks::init(&self.config);
-            is_path_run = handler.is_path_run() || is_path_run;
+            let handler = GdBenchmarks::init();
             rust_bench_handler = Some(handler);
         }
 
         // Filter tests and benches on path and focus
         if let Some(handler) = &mut rust_tests_handler {
-            // handler.set_path_run(is_path_run);
             handler.filter_path_keyword(&self.config);
-            is_path_run = handler.is_path_run();
         }
         if let Some(handler) = &mut rust_bench_handler {
-            handler.set_path_run(is_path_run);
             handler.filter_path_keyword(&self.config);
-            // is_path_run = handler.is_path_run();
         }
 
         // Filter tests and benches on focus and filter

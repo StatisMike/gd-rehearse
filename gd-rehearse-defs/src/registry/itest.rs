@@ -5,7 +5,6 @@
 */
 
 use crate::cases::rust_test_case::RustTestCase;
-use crate::runner::config::RunnerConfig;
 
 use super::CaseFilterer;
 
@@ -32,7 +31,7 @@ impl GdRustItests {
         self.files_count
     }
 
-    pub(crate) fn init(config: &RunnerConfig) -> Self {
+    pub(crate) fn init() -> Self {
         let mut instance = Self {
             tests: Vec::new(),
             files_count: 0,
@@ -41,7 +40,6 @@ impl GdRustItests {
         };
 
         instance.collect_rust_tests();
-        instance.is_path_run = instance.is_any_path_eq(config.scene_path()) || instance.is_path_run;
 
         instance
     }
