@@ -8,7 +8,6 @@ use std::time::Duration;
 
 use crate::cases::rust_bench::RustBenchmark;
 use crate::cases::CaseOutcome;
-use crate::runner::config::RunnerConfig;
 
 use super::CaseFilterer;
 
@@ -35,7 +34,7 @@ impl GdBenchmarks {
         self.files_count
     }
 
-    pub(crate) fn init(config: &RunnerConfig) -> Self {
+    pub(crate) fn init() -> Self {
         let mut instance = Self {
             benches: Vec::new(),
             files_count: 0,
@@ -44,7 +43,6 @@ impl GdBenchmarks {
         };
 
         instance.collect_rust_benchmarks();
-        instance.is_path_run = instance.is_any_path_eq(config.scene_path()) || instance.is_path_run;
         instance
     }
 

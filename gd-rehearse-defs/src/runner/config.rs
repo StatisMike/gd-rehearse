@@ -36,6 +36,7 @@ pub(crate) struct CliConfig {
     mute_filters: bool,
     run_rust_tests: bool,
     run_rust_benchmarks: bool,
+    only_scene_path: bool,
     keyword: String,
     filters: Vec<String>,
 }
@@ -52,6 +53,7 @@ impl CliConfig {
     pub const CMD_USER_MUTE_FILTERS: &'static str = "--mute-filters";
     pub const CMD_USER_KEYWORD: &'static str = "--keyword";
     pub const CMD_USER_FILTERS: &'static str = "--filters";
+    pub const CMD_USER_ONLY_SCENE_PATH: &'static str = "--only-scene-path";
 
     pub fn from_os() -> Result<Self, ConfigError> {
         let args = godot::engine::Os::singleton().get_cmdline_user_args();
@@ -107,6 +109,8 @@ impl CliConfig {
             Self::CMD_USER_FILTERS,
         )?;
 
+        let only_scene_path = Self::get_arg(&mut args_vec, Self::CMD_USER_ONLY_SCENE_PATH);
+
         let unrecognized_args = args_vec
             .iter()
             .map(|str| str.to_string())
@@ -123,6 +127,7 @@ impl CliConfig {
             mute_filters,
             run_rust_tests,
             run_rust_benchmarks,
+            only_scene_path,
             keyword,
             filters,
         })
@@ -193,6 +198,7 @@ pub(crate) struct RunnerConfig {
     run_rust_benchmarks: bool,
     keyword: String,
     ignore_keywords: bool,
+    only_scene_path: bool,
     scene_path: String,
     filters: Vec<String>,
 }
@@ -226,6 +232,10 @@ impl RunnerConfig {
         self.run_rust_benchmarks
     }
 
+    pub fn only_scene_path(&self) -> bool {
+        self.only_scene_path
+    }
+
     pub fn scene_path(&self) -> &str {
         &self.scene_path
     }
@@ -238,6 +248,7 @@ impl RunnerConfig {
         run_rust_benchmarks: bool,
         keyword: &GString,
         ignore_keywords: bool,
+        only_scene_path: bool,
         scene_path: String,
         filters: &PackedStringArray,
     ) -> Result<Self, ConfigError> {
@@ -255,6 +266,7 @@ impl RunnerConfig {
             run_rust_benchmarks,
             ignore_keywords,
             keyword,
+            only_scene_path,
             scene_path,
             filters,
         };
@@ -296,6 +308,9 @@ impl RunnerConfig {
         if !cmdline.keyword.is_empty() {
             instance.keyword = cmdline.keyword.clone()
         };
+        if cmdline.only_scene_path {
+            instance.only_scene_path = true;
+        }
 
         Ok(instance)
     }
@@ -327,6 +342,9 @@ impl RunnerConfig {
         }
         if self.ignore_keywords() {
             additional_message.push("ignoring keywords".to_owned());
+        }
+        if self.only_scene_path() {
+            additional_message.push("scene path specific".to_owned())
         }
 
         if !additional_message.is_empty() {

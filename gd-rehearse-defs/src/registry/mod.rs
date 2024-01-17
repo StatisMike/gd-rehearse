@@ -24,10 +24,9 @@ where
 
     // Filter on path and keyword
     fn filter_path_keyword(&mut self, config: &RunnerConfig) {
-        let is_path_run = self.is_path_run();
         // Retain only the ones with the specified path and keyword
         self.get_cases_mut().retain(|t| {
-            t.should_run_scene_path(config.scene_path(), is_path_run)
+            t.should_run_scene_path(config.scene_path(), config.only_scene_path())
                 && t.should_run_keyword(config.keyword(), config.ignore_keywords())
         });
     }
