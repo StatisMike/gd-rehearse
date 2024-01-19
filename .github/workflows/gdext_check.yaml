@@ -11,13 +11,14 @@ jobs:
     env:
       GDEXT_CHANGED: 0
     steps:
-      - id: check
+      - name: Checking for gdext changes 
         run: |
           curled=$(curl -s https://api.github.com/repos/godot-rust/gdext/commits/heads/master)
-          changed=$(echo $curled | jq -r "((now - (.commit.author.date | fromdateiso8601)) / (60*60*24) | trunc)")
+          changed=$(echo $curled | jq -r "((now - (.commit.author.date | fromdateiso8601)) / (60*60*25) | trunc)")
           echo "GDEXT_CHANGED=${changed}" >> $GITHUB_ENV
 
-      - if: ${{ env.GDEXT_CHANGED }} == '0'
+      - name: Dispatching action
+        if: env.GDEXT_CHANGED == '0'
         run: |
           curl -X POST \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
