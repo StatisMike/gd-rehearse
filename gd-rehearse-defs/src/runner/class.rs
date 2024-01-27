@@ -163,7 +163,6 @@ pub struct GdTestRunner {
     config: RunnerConfig,
     failed_list: Vec<String>,
     began_run: bool,
-    #[base]
     base: Base<Node>,
 }
 
