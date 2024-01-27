@@ -46,7 +46,6 @@
 //   suite_name: GString,
 //   #[var]
 //   test_names: Array<StringName>,
-//   #[base]
 //   base: Base<Resource>
 // }
 
