@@ -9,7 +9,7 @@ proc-macro = true
 
 [dev-dependencies]
 gd-rehearse = { path="../gd-rehearse" }
-godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
+godot = { git = "https://github.com/StatisMike/gdext", branch = "hotfix/CI_remove_dir_all" }
 
 [dependencies]
 gd-rehearse-defs = { path="../gd-rehearse-defs" }
