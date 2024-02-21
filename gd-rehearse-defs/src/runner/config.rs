@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-use super::{is_headless_run, print::MessageWriter};
+use super::{is_godot_debug, is_headless_run, is_rust_debug};
 use core::fmt;
 use godot::builtin::{GString, PackedStringArray};
 
@@ -39,6 +39,7 @@ pub(crate) struct CliConfig {
     only_scene_path: bool,
     keyword: String,
     filters: Vec<String>,
+    quiet_run: bool
 }
 
 impl CliConfig {
@@ -54,6 +55,7 @@ impl CliConfig {
     pub const CMD_USER_KEYWORD: &'static str = "--keyword";
     pub const CMD_USER_FILTERS: &'static str = "--filters";
     pub const CMD_USER_ONLY_SCENE_PATH: &'static str = "--only-scene-path";
+    pub const CMD_USER_QUIET_RUN: &'static str = "--quiet-run";
 
     pub fn from_os() -> Result<Self, ConfigError> {
         let args = godot::engine::Os::singleton().get_cmdline_user_args();
@@ -111,6 +113,8 @@ impl CliConfig {
 
         let only_scene_path = Self::get_arg(&mut args_vec, Self::CMD_USER_ONLY_SCENE_PATH);
 
+        let quiet_run = Self::get_arg(&mut args_vec, Self::CMD_USER_QUIET_RUN);
+
         let unrecognized_args = args_vec
             .iter()
             .map(|str| str.to_string())
@@ -130,6 +134,7 @@ impl CliConfig {
             only_scene_path,
             keyword,
             filters,
+            quiet_run
         })
     }
 
@@ -201,6 +206,7 @@ pub(crate) struct RunnerConfig {
     only_scene_path: bool,
     scene_path: String,
     filters: Vec<String>,
+    quiet_run: bool,
 }
 
 impl RunnerConfig {
@@ -240,6 +246,10 @@ impl RunnerConfig {
         &self.scene_path
     }
 
+    pub fn is_quiet(&self) -> bool {
+        self.quiet_run
+    }
+
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         disallow_focus: bool,
@@ -251,6 +261,7 @@ impl RunnerConfig {
         only_scene_path: bool,
         scene_path: String,
         filters: &PackedStringArray,
+        quiet_run: bool
     ) -> Result<Self, ConfigError> {
         let keyword = keyword.to_string();
         let filters = filters
@@ -269,6 +280,7 @@ impl RunnerConfig {
             only_scene_path,
             scene_path,
             filters,
+            quiet_run
         };
 
         if !is_headless_run() {
@@ -311,51 +323,58 @@ impl RunnerConfig {
         if cmdline.only_scene_path {
             instance.only_scene_path = true;
         }
+        if cmdline.quiet_run {
+            instance.quiet_run = true
+        }
 
         Ok(instance)
     }
+}
 
-    pub fn print_info(&self) {
-        let writer = MessageWriter::new();
+pub(crate) struct RunnerInfo {
+    pub mode: &'static str,
+    pub rust_build: &'static str,
+    pub godot_build: &'static str,
+    pub additional_message: Vec<String>
+}
 
-        if is_headless_run() {
-            writer.println(&format!(
-                "{:^80}\n",
-                format!("Began run in HEADLESS mode in scene: {}", &self.scene_path)
-            ));
+impl RunnerInfo {
+    pub(crate) fn gather(config: &RunnerConfig) -> Self {
+        let mode = if is_headless_run() {
+            "HEADLESS"
         } else {
-            writer.println(&format!(
-                "{:^80}\n",
-                format!("Began run in EDITOR mode in scene: {}", &self.scene_path)
-            ));
-        }
+            "EDITOR"
+        };
+
+        let rust_build = if is_rust_debug() {
+            "debug"
+        } else {
+            "release"
+        };
+
+        let godot_build = if is_godot_debug() {
+            "debug"
+        } else {
+            "release"
+        };
 
         let mut additional_message = Vec::new();
-        if !self.keyword().is_empty() {
-            additional_message.push(format!("using KEYWORD: '{}'", self.keyword()));
+        if !config.keyword().is_empty() {
+            additional_message.push(format!("using KEYWORD: '{}'", config.keyword()));
         }
-        if self.disallow_focus() {
+        if config.disallow_focus() {
             additional_message.push("disallowing focused".to_owned());
         }
-        if self.disallow_skip() {
+        if config.disallow_skip() {
             additional_message.push("disallowing skipping".to_owned());
         }
-        if self.ignore_keywords() {
+        if config.ignore_keywords() {
             additional_message.push("ignoring keywords".to_owned());
         }
-        if self.only_scene_path() {
+        if config.only_scene_path() {
             additional_message.push("scene path specific".to_owned())
         }
 
-        if !additional_message.is_empty() {
-            writer.println(&format!("{:^80}\n", additional_message.join(" & ")));
-        }
-
-        if !self.filters().is_empty() {
-            writer.println(&format!(
-                "   Using filters:\n   * {}\n",
-                self.filters().join("\n   * ")
-            ));
-        }
+        Self { mode, rust_build, godot_build, additional_message }
     }
 }

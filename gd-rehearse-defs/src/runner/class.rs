@@ -9,7 +9,7 @@ use godot::prelude::{godot_api, Base, GString, GodotClass, INode, Node, PackedSt
 
 use crate::cases::rust_bench::RustBenchmark;
 use crate::cases::rust_test_case::RustTestCase;
-use crate::cases::{Case, CaseContext, CaseOutcome};
+use crate::cases::{Case, CaseContext, CaseOutcome, CaseType};
 
 use crate::registry::bench::{BenchResult, GdBenchmarks};
 use crate::registry::itest::GdRustItests;
@@ -23,12 +23,17 @@ use std::time::{Duration, Instant};
 
 #[derive(Copy, Clone, Debug, Default)]
 pub(crate) struct RunnerSummary {
+    kind: CaseType,
     total: i64,
     passed: i64,
     skipped: i64,
 }
 
 impl RunnerSummary {
+    pub fn new(kind: CaseType) -> Self {
+        Self { kind, ..Default::default() }
+    }
+
     pub fn inc_total(&mut self) {
         self.total += 1;
     }
@@ -56,21 +61,28 @@ impl RunnerSummary {
 
     fn conclude(&self, run_time: Duration, failed_list: &mut Vec<String>) -> bool {
         let Self {
+            kind,
             total,
             passed,
             skipped,
         } = *self;
 
-        let writer = MessageWriter::new();
+        let writer = MessageWriter::new(false);
 
-        // Consider 0 tests run as a failure too, because it's probably a problem with the run itself.
+        let kind_display = kind.for_summary();
+
+        // Consider 0 cases run as a failure too, because it's probably a problem with the run itself.
+        if total - skipped == 0 {
+            writer.println(&format!("No {kind_display} cases were run. If this is intended, configure GdTestRunner to omit these cases."));
+            return false;
+        }
+
         let failed = total - passed - skipped;
-        let all_passed = failed == 0 && total != 0;
+        let all_passed = failed == 0;
 
         let outcome = CaseOutcome::from_bool(all_passed);
 
-        let run_time = run_time.as_secs_f32();
-        // let focused_run = self.focus_run;
+        let run_time = (run_time.as_secs_f32() * 100.).round() / 100.;
 
         let extra = if skipped > 0 {
             format!(", {skipped} skipped")
@@ -79,12 +91,11 @@ impl RunnerSummary {
         };
 
         writer.println(&format!(
-            "\nTest result: {outcome} {passed} passed; {failed} failed{extra}."
+            "{kind_display} result: {outcome} {passed} passed; {failed} failed{extra}. Elapsed: {run_time:.2}s."
         ));
-        writer.println(&format!("  Time: {run_time:.2}s."));
 
         if !all_passed {
-            writer.println("\n  Failed tests:");
+            writer.println("\n  Failed:");
             let max = 10;
             for test in failed_list.iter().take(max) {
                 writer.println(&format!("  * {test}"));
@@ -138,6 +149,7 @@ impl RunnerSummary {
 ///   - `--mute-keyword` or `--keyword=my_keyword`: Either mutes the `test_keyword` property or replaces it with the specified one.
 ///   - `--ignore-keywords`: Replaces the `ignore_keywords` property.
 ///   - `--mute-filters` or `--filters=[filter1,filter2]`: Either mutes the `test_filters` property or replaces it with the specified filters.
+///   - `--only-scene-path`: Sets `only_scene_path` property with `true`
 ///
 #[derive(GodotClass)]
 #[class(base=Node)]
@@ -178,8 +190,8 @@ impl INode for GdTestRunner {
             run_benchmarks: true,
             run_tests: true,
             only_scene_path: false,
-            tests_summary: RunnerSummary::default(),
-            benches_summary: RunnerSummary::default(),
+            tests_summary: RunnerSummary::new(CaseType::RustTest),
+            benches_summary: RunnerSummary::new(CaseType::RustBenchmark),
             config: RunnerConfig::default(),
             failed_list: Vec::new(),
             began_run: false,
@@ -204,8 +216,7 @@ impl GdTestRunner {
         let path = self.base().get_scene_file_path().to_string();
 
         self.began_run = true;
-        let start = Instant::now();
-        let writer = MessageWriter::new();
+        let writer = MessageWriter::new(false);
 
         match RunnerConfig::new(
             self.disallow_focus,
@@ -217,6 +228,7 @@ impl GdTestRunner {
             self.only_scene_path,
             path,
             &self.test_filters,
+            false
         ) {
             Ok(config) => self.config = config,
             Err(error) => {
@@ -226,9 +238,11 @@ impl GdTestRunner {
             }
         }
 
+        let writer = MessageWriter::new(self.config.is_quiet());
+
         writer.print_begin();
 
-        self.config.print_info();
+        writer.print_summary_info(&self.config);
 
         let mut rust_test_outcome = true;
         let mut rust_bench_outcome = true;
@@ -283,6 +297,8 @@ impl GdTestRunner {
             let clock = Instant::now();
             self.run_rust_tests(&mut handler);
             let run_time = clock.elapsed();
+            
+            writer.println("");
             rust_test_outcome = self.tests_summary.conclude(run_time, &mut self.failed_list);
         }
 
@@ -296,25 +312,20 @@ impl GdTestRunner {
             let clock = Instant::now();
             self.run_rust_benchmarks(&mut handler);
             let run_time = clock.elapsed();
+
+            writer.println("");
             rust_bench_outcome = self
                 .benches_summary
                 .conclude(run_time, &mut self.failed_list);
         }
 
         let outcome = rust_test_outcome && rust_bench_outcome;
-        let duration = start.elapsed();
-        let mut duration_secs = duration.as_secs();
-        let duration_mins = (duration_secs as f32 / 60.).floor() as u64;
-        duration_secs -= duration_mins * 60;
 
         if outcome {
             writer.print_success()
         } else {
             writer.print_failure()
         }
-        writer.println(&format!(
-            "\n  Took total: {duration_mins}:{duration_secs:0>2}"
-        ));
 
         self.end(!outcome as i32);
     }
@@ -334,7 +345,8 @@ impl GdTestRunner {
             scene_tree: self.base().clone(),
         };
 
-        let writer = MessageWriter::new();
+        let writer = MessageWriter::new(self.config.is_quiet());
+        writer.println("");
 
         let mut last_file = None;
         while let Some(test) = handler.get_test() {
@@ -365,7 +377,7 @@ impl GdTestRunner {
             scene_tree: self.base().clone(),
         };
 
-        let writer = MessageWriter::new();
+        let writer = MessageWriter::new(self.config.is_quiet());
 
         let mut first_line = " ".repeat(36).to_string();
         for metrics in BenchResult::metrics() {
@@ -391,7 +403,7 @@ impl GdTestRunner {
         let inner_repetitions = bench.repetitions;
 
         // Explicit type to prevent bench from returning a value
-        let err_context = || format!("gbbench `{}` failed", bench.name);
+        let err_context = || format!("gdbench `{}` failed", bench.name);
 
         let mut success: Option<()>;
         for _ in 0..crate::registry::bench::WARMUP_RUNS {

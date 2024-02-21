@@ -22,15 +22,19 @@ Every execution of `GdTestRunner` generates output, appearing in the terminal wh
 or in the Godot console when executed from the editor. The output resembles the example below:
 
 ```
---------------------------------------------------------------------------------
---------------------           Running gd-rehearse           --------------------
---------------------------------------------------------------------------------
-                           Began run in HEADLESS mode                           
+$ godot --path tests/godot/ --headless
+Initialize godot-rust (API v4.2.stable.official, runtime v4.2.stable.official)
+Godot Engine v4.2.stable.official.46dc27791 - https://godotengine.org
 
+--------------------------------------------------------------------------------
+--------------------          Running gd-rehearse           --------------------
+--------------------------------------------------------------------------------
+              Began run in HEADLESS mode in scene: res://test.tscn              
+                     Rust build: debug; Godot build: debug                      
                               disallowing focused                               
 
    Found 6 Rust tests in 1 files
-   Found 2 Rust benchmarks in 1 files
+   Found 3 Rust benchmarks in 1 files
 
 --------------------------------------------------------------------------------
    Running Rust tests
@@ -44,26 +48,33 @@ or in the Godot console when executed from the editor. The output resembles the 
    -- filter_me ... ok!
    -- filter_me_too ... ok!
 
-Test result: ok!. 5 passed; 0 failed, 1 skipped.
-  Time: 0.00s.
+Tests result: ok! 5 passed; 0 failed, 1 skipped. Elapsed: 0.00s.
 
 --------------------------------------------------------------------------------
    Running Rust benchmarks
 --------------------------------------------------------------------------------
                                               min       median
-
    bench.rs:
+   -- focused_bench              ...      0.015μs      0.016μs
    -- skipped_bench              ...    ~skipped~
-   -- focused_bench              ...      0.015μs      0.047μs
+   -- normal_bench               ...      0.016μs      0.020μs
 
-Test result: ok!. 1 passed; 0 failed, 1 skipped.
-  Time: 0.00s.
+Benchmarks result: ok! 2 passed; 0 failed, 1 skipped. Elapsed: 0.00s.
 
 = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
  = = = = = = = = = =             ! SUCCESS !               = = = = = = = = = =
-= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = 
+= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+```
 
-  Took total: 0:00
+Or for fans of straight to the point, commandline option `--quiet-run` can be used:
+
+```
+$ godot --path tests/godot/ --headless -- --quiet-run
+Initialize godot-rust (API v4.2.stable.official, runtime v4.2.stable.official)
+Godot Engine v4.2.stable.official.46dc27791 - https://godotengine.org
+ 
+Tests result: ok! 5 passed; 0 failed, 1 skipped. Elapsed: 0.00s.
+Benchmarks result: ok! 2 passed; 0 failed, 1 skipped. Elapsed: 0.00s.
 ```
 
 ## Setup

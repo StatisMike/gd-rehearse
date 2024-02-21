@@ -125,3 +125,19 @@ pub(crate) trait Case {
         false
     }
 }
+
+#[derive(Clone, Copy, PartialEq, Debug, Default)]
+pub enum CaseType {
+    #[default]
+    RustTest,
+    RustBenchmark
+}
+
+impl CaseType {
+    pub fn for_summary(&self) -> &str {
+        match self {
+            CaseType::RustTest => "Tests",
+            CaseType::RustBenchmark => "Benchmarks",
+        }
+    }
+}
