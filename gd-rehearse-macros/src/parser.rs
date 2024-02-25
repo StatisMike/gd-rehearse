@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-use proc_macro2::{Literal, TokenTree};
+use proc_macro2::{Ident, Literal, TokenTree};
 use std::collections::VecDeque;
 use venial::{Attribute, AttributeValue};
 
@@ -19,6 +19,8 @@ pub enum AttributeIdent {
     Skip,
     Keyword,
     ScenePath,
+    Setup,
+    Cleanup,
 }
 
 impl AttributeIdent {
@@ -29,6 +31,8 @@ impl AttributeIdent {
             "skip" => Some(Self::Skip),
             "keyword" => Some(Self::Keyword),
             "scene_path" => Some(Self::ScenePath),
+            "setup" => Some(Self::Setup),
+            "cleanup" => Some(Self::Cleanup),
             _ => None,
         }
     }
@@ -40,6 +44,8 @@ impl AttributeIdent {
             AttributeIdent::Skip => "skip".to_owned(),
             AttributeIdent::Keyword => "keyword".to_owned(),
             AttributeIdent::ScenePath => "scene_path".to_owned(),
+            AttributeIdent::Setup => "setup".to_owned(),
+            AttributeIdent::Cleanup => "cleanup".to_owned(),
         }
     }
 
@@ -106,6 +112,16 @@ impl AttributeValueParser {
             return Err(venial::Error::new_at_tokens(token, "expected literal"));
         }
         Err(venial::Error::new("expected literal"))
+    }
+
+    pub fn get_ident(&mut self) -> Result<Ident, venial::Error> {
+        if let Some(token) = self.tokens.pop_front() {
+            if let TokenTree::Ident(ident) = token {
+                return Ok(ident);
+            }
+            return Err(venial::Error::new_at_tokens(token, "expected identifier"));
+        }
+        Err(venial::Error::new("expected identifier"))
     }
 
     pub fn from_attribute_group_at_path(

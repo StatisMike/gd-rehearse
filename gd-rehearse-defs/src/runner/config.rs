@@ -39,7 +39,7 @@ pub(crate) struct CliConfig {
     only_scene_path: bool,
     keyword: String,
     filters: Vec<String>,
-    quiet_run: bool
+    quiet_run: bool,
 }
 
 impl CliConfig {
@@ -134,7 +134,7 @@ impl CliConfig {
             only_scene_path,
             keyword,
             filters,
-            quiet_run
+            quiet_run,
         })
     }
 
@@ -261,7 +261,7 @@ impl RunnerConfig {
         only_scene_path: bool,
         scene_path: String,
         filters: &PackedStringArray,
-        quiet_run: bool
+        quiet_run: bool,
     ) -> Result<Self, ConfigError> {
         let keyword = keyword.to_string();
         let filters = filters
@@ -280,7 +280,7 @@ impl RunnerConfig {
             only_scene_path,
             scene_path,
             filters,
-            quiet_run
+            quiet_run,
         };
 
         if !is_headless_run() {
@@ -335,7 +335,7 @@ pub(crate) struct RunnerInfo {
     pub mode: &'static str,
     pub rust_build: &'static str,
     pub godot_build: &'static str,
-    pub additional_message: Vec<String>
+    pub additional_message: Vec<String>,
 }
 
 impl RunnerInfo {
@@ -346,17 +346,9 @@ impl RunnerInfo {
             "EDITOR"
         };
 
-        let rust_build = if is_rust_debug() {
-            "debug"
-        } else {
-            "release"
-        };
+        let rust_build = if is_rust_debug() { "debug" } else { "release" };
 
-        let godot_build = if is_godot_debug() {
-            "debug"
-        } else {
-            "release"
-        };
+        let godot_build = if is_godot_debug() { "debug" } else { "release" };
 
         let mut additional_message = Vec::new();
         if !config.keyword().is_empty() {
@@ -375,6 +367,11 @@ impl RunnerInfo {
             additional_message.push("scene path specific".to_owned())
         }
 
-        Self { mode, rust_build, godot_build, additional_message }
+        Self {
+            mode,
+            rust_build,
+            godot_build,
+            additional_message,
+        }
     }
 }

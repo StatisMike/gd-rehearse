@@ -10,5 +10,8 @@ license = "MPL-2.0"
 godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
 paste = "1.0.14"
 
+[dev-dependencies]
+gd-rehearse = { path = "../gd-rehearse" }
+
 [package.metadata.docs.rs]
 license-file = "../License.txt"

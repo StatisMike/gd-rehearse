@@ -10,19 +10,53 @@ pub mod rust_test_case;
 
 use std::cmp::Ordering;
 
-use godot::engine::{Engine, Node};
-use godot::obj::Gd;
+use godot::builtin::NodePath;
+use godot::engine::{Engine, Node, NodeExt};
+use godot::obj::{Gd, Inherits};
 
-/// Optional test context for `#[gditest]` and `#[gdbench]` annotated functions.
-///
-/// Currently it allows only to access [GdTestRunner](crate::runner::GdTestRunner) scene tree during tests and benchmarking.
-pub struct CaseContext {
-    pub(crate) scene_tree: Gd<Node>,
-}
+// /// Optional test context for `#[gditest]` and `#[gdbench]` annotated functions.
+// ///
+// /// Currently it allows only to access [GdTestRunner](crate::runner::GdTestRunner) scene tree during tests and benchmarking.
+// pub struct CaseContext {
+//     pub(crate) scene_tree: Gd<Node>,
+// }
 
-impl CaseContext {
-    pub fn scene_tree(&self) -> &Gd<Node> {
-        &self.scene_tree
+// impl CaseContext {
+//     pub fn scene_tree(&self) -> &Gd<Node> {
+//         &self.scene_tree
+//     }
+// }
+
+pub trait CaseContext {
+    /// Get access to current scene tree.
+    ///
+    /// Access is provided relatively to the [GdTestRunner](crate::runner::GdTestRunner) position in the current scene (it's recommended
+    /// that it is a root node of the scene).
+    ///
+    /// Use it if you need to do something else besides getting access to some specific node, especially during benchmarking. For node
+    /// retrieval you can use [CaseContext::get_node] and [CaseContext::get_node_as].
+    fn scene_tree(&self) -> &Gd<Node>;
+
+    /// Gets node located at `path`, relatively to [GdTestRunner](crate::runner::GdTestRunner).
+    ///
+    /// # Panics
+    ///
+    /// Panics if no node is present at the `path`.
+    fn get_node(&self, path: impl Into<NodePath>) -> Gd<Node> {
+        self.scene_tree()
+            .get_node(path.into())
+            .expect("couldn't get node")
+    }
+
+    /// Gets node located at `path`, relatively to [GdTestRunner](crate::runner::GdTestRunner), casted to `T`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if no node is present at the `path`, or cannot be casted to `T`.
+    fn get_node_as<T: Inherits<Node>>(&self, path: impl Into<NodePath>) -> Gd<T> {
+        self.scene_tree()
+            .try_get_node_as(path.into())
+            .expect("couldn't get node as")
     }
 }
 
@@ -112,7 +146,7 @@ pub(crate) trait Case {
     }
 
     fn should_run_scene_path(&self, scene_path: &str, is_path_run: bool) -> bool {
-        if !is_path_run && self.get_case_scene_path().is_none(){
+        if !is_path_run && self.get_case_scene_path().is_none() {
             return true;
         }
         self.scene_path_eq(scene_path)
@@ -130,7 +164,7 @@ pub(crate) trait Case {
 pub enum CaseType {
     #[default]
     RustTest,
-    RustBenchmark
+    RustBenchmark,
 }
 
 impl CaseType {

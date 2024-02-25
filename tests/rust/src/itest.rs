@@ -5,7 +5,6 @@
 */
 
 use gd_rehearse::itest::*;
-use gd_rehearse::CaseContext;
 use godot::engine::Object;
 use godot::obj::Gd;
 
@@ -31,7 +30,7 @@ fn skipped_test() {
 }
 
 #[gditest(keyword = "with ctx")]
-fn test_with_ctx(ctx: &CaseContext) {
+fn test_with_ctx(ctx: &TestContext) {
     let gd: Gd<Object> = ctx.scene_tree().clone().upcast();
     gd.instance_id();
 }
@@ -46,7 +45,7 @@ fn filter_me() {}
 fn filter_me_too() {}
 
 #[gditest(scene_path = "res://with_path.tscn")]
-fn with_test_path(ctx: &CaseContext) {
+fn with_test_path(ctx: &TestContext) {
     assert_eq!(
         ctx.scene_tree().get_scene_file_path().to_string(),
         "res://with_path.tscn"
@@ -60,7 +59,7 @@ fn shouldnt_run_path() {
 }
 
 #[gditest(scene_path = "res://with_path.tscn")]
-fn access_ctx_with_path(ctx: &CaseContext) {
+fn access_ctx_with_path(ctx: &TestContext) {
     let some_node = ctx.scene_tree().get_node("SomeNode".into());
     assert!(some_node.is_some());
 
