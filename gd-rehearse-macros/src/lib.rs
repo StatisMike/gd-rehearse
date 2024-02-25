@@ -21,7 +21,7 @@ mod utils;
 ///
 /// A function annotated with `#[gditest]` needs to:
 /// - Have no return values.
-/// - Have no parameters or only a singular [`CaseContext`](gd_rehearse_defs::cases::CaseContext).
+/// - Have no parameters or only a singular [`TestContext`](gd_rehearse_defs::cases::rust_test_case::TestContext).
 ///
 /// ## Attributes
 /// An attribute-less macro will make the tests run, but some attributes are available for better customizability, especially when working
@@ -34,7 +34,6 @@ mod utils;
 ///
 /// ## Examples
 /// ```no_run
-/// use gd_rehearse::CaseContext;
 /// use gd_rehearse::itest::*;
 ///
 /// // Causes a focus run during which only the focused tests will be executed, but only with
@@ -53,13 +52,13 @@ mod utils;
 ///
 /// // Can access the `GdTestRunner` scene_tree.
 /// #[gditest]
-/// fn test_with_ctx(ctx: &CaseContext) {
+/// fn test_with_ctx(ctx: &TestContext) {
 ///     ctx.scene_tree().instance_id();
 /// }
 ///
 /// // Will only run in `res://special_cases.tscn` scene.
 /// #[gditest(scene_path="res://special_cases.tscn")]
-/// fn test_with_path(ctx: &CaseContext) {
+/// fn test_with_path(ctx: &TestContext) {
 ///     let test_node = ctx.scene_tree().get_node("SomeTestNode".into());
 ///     assert!(test_node.is_some());
 ///     assert!(!test_node.unwrap().get("property_should_be_here".into()).is_nil());
@@ -77,7 +76,7 @@ pub fn gditest(meta: TokenStream, input: TokenStream) -> TokenStream {
 ///
 /// A function annotated with `#[gdbench]` must:
 /// - Have a return value.
-/// - Have no parameters or only a singular [`CaseContext`](gd_rehearse_defs::cases::CaseContext).
+/// - Have no parameters or only a singular [`BenchContext`](gd_rehearse_defs::cases::rust_bench::BenchContext).
 ///
 /// Every benchmark is executed 200 times for a *warm-up*, followed by 501 additional runs to assess runtime (an odd number of runs for easy
 /// median extraction). Minimum and median run times will be displayed.
@@ -91,13 +90,14 @@ pub fn gditest(meta: TokenStream, input: TokenStream) -> TokenStream {
 /// - `keyword`: A specific keyword that will be picked up by the runner. The benchmark runs only if the runner has the same keyword specified.
 /// - `scene_path`: Godot path to the scene. If specified, given benchmark will only run if runner's scene path is the same.
 /// - `repeat`: Specifies the number of internal repeats the benchmark should undergo. By default, the function executes 100 times within every run.
+/// - `setup`: Optional function that will be executed before benchmark execution, to set up the scene for benchmarks.
+/// - `cleanup`: Optional function that will be executed after benchmark execution, to clean up after benchmarks. Rarely needed, as when
+///   `setup` is present, the default cleanup function should always clean up efficiently.
 ///
 /// ## Examples
 /// ```no_run
-/// use gd_rehearse::CaseContext;
 /// use gd_rehearse::bench::*;
-/// use godot::obj::InstanceId;
-/// use godot::builtin::Variant;
+/// use godot::prelude::*;
 ///
 /// // Causes a focus run during which only the focused benchmarks will be executed, but only with
 /// // `my bench` as a keyword in the runner.
@@ -114,18 +114,18 @@ pub fn gditest(meta: TokenStream, input: TokenStream) -> TokenStream {
 ///
 /// // Can access the `GdTestRunner` scene_tree.
 /// #[gdbench]
-/// fn bench_with_ctx(ctx: &CaseContext) -> InstanceId {
+/// fn bench_with_ctx(ctx: &BenchContext) -> InstanceId {
 ///     ctx.scene_tree().instance_id()
 /// }
-/// 
+///
 /// // Will only run in `res://special_cases.tscn` scene.
 /// #[gdbench(scene_path="res://special_cases.tscn")]
-/// fn bench_with_path(ctx: &CaseContext) -> Variant {
+/// fn bench_with_path(ctx: &BenchContext) -> Variant {
 ///     let test_node = ctx.scene_tree().get_node("SomeTestNode".into()).expect("Can't get node");
 ///     let variant = test_node.get("property_should_be_here".into());
 ///     assert!(!variant.is_nil());
 ///     variant
-/// } 
+/// }
 /// ```
 #[proc_macro_attribute]
 pub fn gdbench(meta: TokenStream, input: TokenStream) -> TokenStream {

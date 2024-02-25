@@ -7,9 +7,9 @@
 use godot::obj::WithBaseField;
 use godot::prelude::{godot_api, Base, GString, GodotClass, INode, Node, PackedStringArray};
 
-use crate::cases::rust_bench::RustBenchmark;
-use crate::cases::rust_test_case::RustTestCase;
-use crate::cases::{Case, CaseContext, CaseOutcome, CaseType};
+use crate::cases::rust_bench::{BenchContext, RustBenchmark};
+use crate::cases::rust_test_case::{RustTestCase, TestContext};
+use crate::cases::{Case, CaseOutcome, CaseType};
 
 use crate::registry::bench::{BenchResult, GdBenchmarks};
 use crate::registry::itest::GdRustItests;
@@ -31,7 +31,10 @@ pub(crate) struct RunnerSummary {
 
 impl RunnerSummary {
     pub fn new(kind: CaseType) -> Self {
-        Self { kind, ..Default::default() }
+        Self {
+            kind,
+            ..Default::default()
+        }
     }
 
     pub fn inc_total(&mut self) {
@@ -228,7 +231,7 @@ impl GdTestRunner {
             self.only_scene_path,
             path,
             &self.test_filters,
-            false
+            false,
         ) {
             Ok(config) => self.config = config,
             Err(error) => {
@@ -297,7 +300,7 @@ impl GdTestRunner {
             let clock = Instant::now();
             self.run_rust_tests(&mut handler);
             let run_time = clock.elapsed();
-            
+
             writer.println("");
             rust_test_outcome = self.tests_summary.conclude(run_time, &mut self.failed_list);
         }
@@ -341,9 +344,7 @@ impl GdTestRunner {
     }
 
     fn run_rust_tests(&mut self, handler: &mut GdRustItests) {
-        let ctx = CaseContext {
-            scene_tree: self.base().clone(),
-        };
+        let ctx = TestContext::new(self.base().clone());
 
         let writer = MessageWriter::new(self.config.is_quiet());
         writer.println("");
@@ -359,7 +360,7 @@ impl GdTestRunner {
         }
     }
 
-    fn run_rust_test(&self, test: &RustTestCase, ctx: &CaseContext) -> CaseOutcome {
+    fn run_rust_test(&self, test: &RustTestCase, ctx: &TestContext) -> CaseOutcome {
         if !test.should_run_skip(self.config.disallow_skip()) {
             return CaseOutcome::Skipped;
         }
@@ -373,9 +374,7 @@ impl GdTestRunner {
     }
 
     fn run_rust_benchmarks(&mut self, benchmarks: &mut GdBenchmarks) {
-        let ctx = CaseContext {
-            scene_tree: self.base().clone(),
-        };
+        let mut ctx = BenchContext::new(self.base().clone());
 
         let writer = MessageWriter::new(self.config.is_quiet());
 
@@ -388,14 +387,48 @@ impl GdTestRunner {
         let mut last_file = None;
         while let Some(bench) = benchmarks.get_benchmark() {
             writer.print_bench_pre(&bench, &mut last_file);
-            let result = self.run_rust_benchmark(&bench, &ctx);
+
+            match bench.execute_setup_function(ctx) {
+                Ok(setup_ctx) => ctx = setup_ctx,
+                Err(_) => {
+                    writer.println(&format!(
+                        "setup error in `{name}`: panic while executing function",
+                        name = bench.name
+                    ));
+                    self.benches_summary.update_stats(
+                        &bench,
+                        &CaseOutcome::Failed,
+                        &mut self.failed_list,
+                    );
+                    break;
+                }
+            }
+
+            let result = self.run_rust_benchmark(&bench, &mut ctx);
+
+            match bench.execute_cleanup_function(ctx) {
+                Ok(cleanup_ctx) => ctx = cleanup_ctx,
+                Err(error) => {
+                    writer.println(&format!(
+                        "cleanup error in `{name}`: {error}",
+                        name = bench.name
+                    ));
+                    self.benches_summary.update_stats(
+                        &bench,
+                        &CaseOutcome::Failed,
+                        &mut self.failed_list,
+                    );
+                    break;
+                }
+            }
+
             self.benches_summary
                 .update_stats(&bench, &result.outcome, &mut self.failed_list);
             writer.print_bench_post(bench.get_case_name(), result);
         }
     }
 
-    fn run_rust_benchmark(&self, bench: &RustBenchmark, ctx: &CaseContext) -> BenchResult {
+    fn run_rust_benchmark(&self, bench: &RustBenchmark, ctx: &mut BenchContext) -> BenchResult {
         if !bench.should_run_skip(self.config.disallow_skip()) {
             return BenchResult::skipped();
         }
@@ -413,11 +446,13 @@ impl GdTestRunner {
             }
         }
 
+        ctx.zero_duration();
+
         let mut times = Vec::with_capacity(501);
         for _ in 0..crate::registry::bench::TEST_RUNS {
             let start = Instant::now();
             success = godot::private::handle_panic(err_context, || (bench.function)(ctx));
-            let duration = start.elapsed();
+            let duration = ctx.get_adjusted_duration(start);
             if success.is_none() {
                 return BenchResult::failed();
             }

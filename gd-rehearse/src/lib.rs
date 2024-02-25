@@ -11,19 +11,20 @@
 //! your code, and the crate provides the [`GdTestRunner`] [`GodotClass`](trait@godot::prelude::GodotClass) for executing them within
 //! a Godot scene.
 
-pub use gd_rehearse_defs::cases::CaseContext;
 pub use gd_rehearse_defs::runner::GdTestRunner;
 
 /// Contains all symbols necessary to use [`#[gditest]`](macro@gd_rehearse_macros::gditest) macro.
 pub mod itest {
-    pub use gd_rehearse_defs::cases::rust_test_case::RustTestCase;
+    pub use gd_rehearse_defs::cases::rust_test_case::{RustTestCase, TestContext};
+    pub use gd_rehearse_defs::cases::CaseContext;
     pub use gd_rehearse_defs::registry::itest::*;
     pub use gd_rehearse_macros::gditest;
 }
 
 /// Contains all symbols necessary to use [`#[gdbench]`](macro@gd_rehearse_macros::gdbench) macro.
 pub mod bench {
-    pub use gd_rehearse_defs::cases::rust_bench::{bench_used, RustBenchmark};
+    pub use gd_rehearse_defs::cases::rust_bench::{bench_used, BenchContext, RustBenchmark};
+    pub use gd_rehearse_defs::cases::CaseContext;
     pub use gd_rehearse_defs::registry::bench::*;
     pub use gd_rehearse_macros::gdbench;
 }

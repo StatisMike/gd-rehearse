@@ -7,7 +7,7 @@
 use crate::parser::{AttributeIdent, AttributeValueParser};
 use crate::utils::bail;
 
-use proc_macro2::TokenStream;
+use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
 use venial::{Declaration, Error, FnParam, Function};
 
@@ -38,6 +38,8 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
     let mut skipped = false;
     let mut keyword = quote! { None };
     let mut scene_path = quote! { None };
+    let mut setup_function: Option<Ident> = None;
+    let mut cleanup_function: Option<Ident> = None;
 
     let mut parser =
         AttributeValueParser::from_attribute_group_at_path(&func.attributes, "gdbench")?;
@@ -48,6 +50,8 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
         AttributeIdent::Repeat,
         AttributeIdent::Keyword,
         AttributeIdent::ScenePath,
+        AttributeIdent::Setup,
+        AttributeIdent::Cleanup,
     ])? {
         match ident {
             AttributeIdent::Repeat => {
@@ -79,15 +83,44 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
                 scene_path = quote! { Some( #scene_path_lit ) };
                 parser.progress_puct();
             }
+            AttributeIdent::Setup => {
+                parser.pop_equal_sign()?;
+                setup_function = Some(parser.get_ident()?);
+                parser.progress_puct();
+            }
+            AttributeIdent::Cleanup => {
+                parser.pop_equal_sign()?;
+                cleanup_function = Some(parser.get_ident()?);
+                parser.progress_puct();
+            }
         }
     }
 
     if skipped && focused {
         return bail!(
             &func.name,
-            "#[gditest]: keys `skip` and `focus` are mutually exclusive",
+            "#[gdbench]: keys `skip` and `focus` are mutually exclusive",
         );
     }
+
+    if cleanup_function.is_some() && setup_function.is_none() {
+        return bail!(
+            &cleanup_function,
+            "#[gdbench]: Cleanup function is unneeded if setup function is not provided",
+        );
+    }
+
+    let setup_function = if let Some(setup) = setup_function {
+        quote! { Some(#setup) }
+    } else {
+        quote! { None }
+    };
+
+    let cleanup_function = if let Some(cleanup) = cleanup_function {
+        quote! { Some(#cleanup) }
+    } else {
+        quote! { None }
+    };
 
     let bench_name = &func.name;
     let bench_name_str = func.name.to_string();
@@ -100,7 +133,7 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
                 .ty
                 .tokens
                 .last()
-                .map(|last| last.to_string() == "CaseContext")
+                .map(|last| last.to_string() == "BenchContext")
                 .unwrap_or(false);
             if is_context {
                 param.to_token_stream()
@@ -112,7 +145,7 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
             return bad_signature(&func);
         }
     } else {
-        quote! { __unused_context: &::gd_rehearse::CaseContext }
+        quote! { __unused_context: &::gd_rehearse::bench::BenchContext }
     };
 
     let body = &func.body;
@@ -134,7 +167,9 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
           line: std::line!(),
           function: #bench_name,
           repetitions: #repeats,
-          scene_path: #scene_path
+          scene_path: #scene_path,
+          setup_function: #setup_function,
+          cleanup_function: #cleanup_function
         }}
     })
 }
@@ -144,7 +179,7 @@ fn bad_signature(func: &Function) -> Result<TokenStream, Error> {
         func,
         "#[gdbench] function must have one of these signatures:\
         \n  fn {f}() -> Type {{ ... }}\
-        \n  fn {f}(ctx: &CaseContext) -> Type {{ ... }}",
+        \n  fn {f}(ctx: &BenchContext) -> Type {{ ... }}",
         f = func.name,
     )
 }

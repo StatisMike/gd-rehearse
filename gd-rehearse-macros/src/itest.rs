@@ -82,7 +82,7 @@ pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> 
                 .ty
                 .tokens
                 .last()
-                .map(|last| last.to_string() == "CaseContext")
+                .map(|last| last.to_string() == "TestContext")
                 .unwrap_or(false);
             if is_context {
                 param.to_token_stream()
@@ -93,7 +93,7 @@ pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> 
             return bad_signature(&func);
         }
     } else {
-        quote! { __unused_context: &::gd_rehearse::CaseContext }
+        quote! { __unused_context: &::gd_rehearse::itest::TestContext }
     };
 
     let body = &func.body;
@@ -121,7 +121,7 @@ fn bad_signature(func: &Function) -> Result<TokenStream, Error> {
         func,
         "#[gditest] function must have one of these signatures:\
         \n  fn {f}() {{ ... }}\
-        \n  fn {f}(ctx: &CaseContext) {{ ... }}",
+        \n  fn {f}(ctx: &TestContext) {{ ... }}",
         f = func.name,
     )
 }

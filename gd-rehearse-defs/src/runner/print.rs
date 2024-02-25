@@ -71,12 +71,19 @@ impl MessageWriter {
     }
 
     pub fn print_summary_info(&self, config: &RunnerConfig) {
-
-        let RunnerInfo { mode, rust_build, godot_build, additional_message } = RunnerInfo::gather(config);
+        let RunnerInfo {
+            mode,
+            rust_build,
+            godot_build,
+            additional_message,
+        } = RunnerInfo::gather(config);
 
         self.println(&format!(
             "{:^80}",
-            format!("Began run in {mode} mode in scene: {scene_path}", scene_path = &config.scene_path())
+            format!(
+                "Began run in {mode} mode in scene: {scene_path}",
+                scene_path = &config.scene_path()
+            )
         ));
 
         self.println(&format!(
