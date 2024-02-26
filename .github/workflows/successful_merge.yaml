@@ -1,0 +1,40 @@
+name: Post-succesfull master merge actions
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  gdext_sha: 
+    uses: ./.github/workflows/reusable_gdext_sha.yaml
+
+  gdext_badge:
+    uses: ./.github/workflows/reusable_gdext_badge.yaml
+    needs: gdext_sha
+    with: 
+      gdext_sha: ${{ needs.gdext_sha.outputs.sha }}
+
+  doc:
+    name: Deploy documentation on Github Pages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Documentation
+        run: cargo doc -p gd-rehearse --no-deps
+        
+      - name: Setup index
+        run: cp ./doc_index.html ./target/doc/index.html
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./target/doc
+          force_orphan: true
