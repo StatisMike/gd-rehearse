@@ -1,0 +1,113 @@
+name: Godot integration tests
+
+on:
+  workflow_call:
+    inputs:
+      godot-version:
+        required: true
+        type: string
+      release:
+        default: false
+        type: boolean
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-22.04
+    env: 
+      GODOT_BASE_URL: http://downloads.tuxfamily.org/godotengine/${{ inputs.godot-version }}
+      GODOT_BINARY: Godot_v${{ inputs.godot-version }}-stable_linux.x86_64
+      GODOT_EXPORT_TEMPLATES: Godot_v${{ inputs.godot-version }}-stable_export_templates.tpz
+      GODOT4_BIN: ""
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
+      - name: Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Godot Binary Cache
+        id: cache-godot-bin
+        uses: actions/cache@v4
+        with:
+          path: godot_bin_cache
+          key: ${{ inputs.godot-version }}-godot
+
+      - name: Download Godot
+        if: steps.cache-godot-bin.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          mkdir godot_bin_cache && cd godot_bin_cache
+          curl $GODOT_BASE_URL/$GODOT_BINARY.zip >> godot.zip
+          unzip godot.zip && rm godot.zip && chmod +x $GODOT_BINARY 
+          echo "GODOT4_BIN=$(readlink -f $GODOT_BINARY)" >> $GITHUB_ENV
+
+      - name: Set GODOT4_BIN
+        if: steps.cache-godot-bin.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          echo "GODOT4_BIN=$(readlink -f ./godot_bin_cache/${{ env.GODOT_BINARY }})" >> $GITHUB_ENV
+
+      - name: Build tests crate (debug)
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: | 
+            GODOT4_BIN=${{ env.GODOT4_BIN }}
+            cargo build -p tests
+
+      - name: Build tests crate (release)
+        if: inputs.release == true
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 5
+          max_attempts: 3
+          command: | 
+            GODOT4_BIN=${{ env.GODOT4_BIN }}
+            cargo build -p tests --release
+        
+      - name: Run Godot integration tests (dev)
+        if: inputs.release == false
+        shell: bash
+        run: ${{ env.GODOT4_BIN }} --headless --path tests/godot
+
+      - name: Godot export templates cache
+        id: cache-godot-tmpl
+        uses: actions/cache@v4
+        with:
+          path: godot_templates_cache
+          key: ${{ inputs.godot-version }}-godot-templates
+      
+      - name: Download Godot export templates
+        if: steps.cache-godot-tmpl.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          mkdir godot_templates_cache && cd godot_templates_cache
+          curl $GODOT_BASE_URL/$GODOT_EXPORT_TEMPLATES >> godot_tmpl.tpz
+
+      - name: Unzip Export templates
+        shell: bash
+        run: |
+          /usr/bin/unzip ./godot_templates_cache/godot_tmpl.tpz -d /home/runner/.local/share/godot
+          /usr/bin/mkdir -p /home/runner/.local/share/godot/export_templates/${{ inputs.godot-version }}.stable
+          /usr/bin/mv /home/runner/.local/share/godot/templates/* -t /home/runner/.local/share/godot/export_templates/${{ inputs.godot-version }}.stable
+
+      - name: Export godot project (debug)
+        if: inputs.release != true
+        shell: bash
+        run: |
+          /usr/bin/mkdir -p /home/runner/.local/share/godot/builds/LinuxHeadless
+          ${{ env.GODOT4_BIN }} --headless --path tests/godot --export-debug Linux/Headless /home/runner/.local/share/godot/builds/LinuxHeadless/test_headless.x86_64
+
+      - name: Export godot project (release)
+        if: inputs.release == true
+        shell: bash
+        run: |
+          /usr/bin/mkdir -p /home/runner/.local/share/godot/builds/LinuxHeadless
+          ${{ env.GODOT4_BIN }} --headless --path tests/godot --export-release Linux/Headless /home/runner/.local/share/godot/builds/LinuxHeadless/test_headless.x86_64
+
+      - name: Run Godot integration tests (export)
+        shell: bash
+        run: /home/runner/.local/share/godot/builds/LinuxHeadless/test_headless.x86_64

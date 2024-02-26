@@ -5,63 +5,41 @@ on:
     branches:
       - master
       - development
-  push:
-    branches:
-      - master
-      
   workflow_dispatch:
 
 jobs:
 
-  tests:
-    name: Tests
-    runs-on: ubuntu-20.04
-    env: 
-      GODOT_BASE_URL: http://downloads.tuxfamily.org/godotengine/4.2
-      GODOT_BINARY: Godot_v4.2-stable_linux.x86_64
-      SHORT_SHA: error
-
+  rust-test:
+    name: Cargo tests
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Get gdext latest commit
-        id: gdext_commit
-        shell: bash
-        run: |
-          sha=$(curl -s https://api.github.com/repos/godot-rust/gdext/commits/heads/master | jq -r ".sha")
-          echo "SHORT_SHA=${sha:0:10}" >> $GITHUB_ENV
-
-      - name: Run Rust tests
-        run: cargo test
-
-      - name: Download Godot
-        shell: bash
-        run: |
-          curl $GODOT_BASE_URL/$GODOT_BINARY.zip >> godot.zip
-          unzip godot.zip && rm godot.zip && chmod +x $GODOT_BINARY
-
-      - name: Build tests crate
-        shell: bash
-        run: cargo build -p tests
-        
-      - name: Run Godot integration tests - main scene
-        shell: bash
-        run: ./$GODOT_BINARY --path tests/godot --headless
-
-      - name: Run Godot integration tests - specific scene
-        shell: bash
-        run: ./$GODOT_BINARY --path tests/godot res://with_path.tscn --headless -- --disallow-skip --only-scene-path
-
-      - if: github.ref == 'refs/heads/master'
-        name: gdext Commit badge
-        uses: RubbaBoy/BYOB@v1.3.0
+      - name: Cargo test
+        uses: nick-fields/retry@v2
         with:
-          name: gdext_latest_success
-          label: 'Latest compatible gdext'
-          status: ${{ env.SHORT_SHA }}
-          color: 148f07
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          timeout_minutes: 5
+          max_attempts: 3
+          command: cargo test
+
+  debug-test:
+    name: Rust-Godot integration tests on debug build
+    needs: rust-test
+    uses: ./.github/workflows/reusable_tests.yaml
+    with:
+      godot-version: 4.2
+      release: false
+
+  release-test:
+    name: Rust-Godot integration tests on release build
+    needs: debug-test
+    if: github.base_ref == 'master' || github.ref_name == 'master'
+    uses: ./.github/workflows/reusable_tests.yaml
+    with:
+      godot-version: 4.2
+      release: true
+

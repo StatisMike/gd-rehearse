@@ -1,0 +1,23 @@
+name: gdext commit compatibility badge
+
+on:
+  workflow_call:
+    inputs:
+      gdext_sha:
+        required: true
+        type: string
+
+jobs:
+  badge:
+    name: gdext badge
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Last compatible gdext commit badge
+        uses: RubbaBoy/BYOB@v1.3.0
+        with:
+          name: gdext_latest_success
+          label: 'Latest compatible gdext'
+          status: ${{ inputs.gdext_sha }}
+          color: 148f07
+          github_token: ${{ secrets.GITHUB_TOKEN }}
