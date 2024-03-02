@@ -1,4 +1,4 @@
-name: schedule-check
+name: Continuous tests
 on: 
   schedule:
    - cron: "23 06 * * *"
