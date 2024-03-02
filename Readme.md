@@ -1,5 +1,5 @@
 # gd-rehearse
-![tests workflow](https://github.com/StatisMike/gd-rehearse/actions/workflows/tests.yaml/badge.svg)
+![Continuous tests](https://github.com/StatisMike/gd-rehearse/actions/workflows/tests.yaml/badge.svg)
 [![Latest compatible gdext](https://byob.yarr.is/StatisMike/gd-rehearse/gdext_latest_success)](https://github.com/godot-rust/gdext)
 
 

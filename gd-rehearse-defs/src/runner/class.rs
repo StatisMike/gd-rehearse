@@ -367,10 +367,10 @@ impl GdTestRunner {
 
         // Explicit type to prevent tests from returning a value
         let err_context = || format!("gditest `{}` failed", test.name);
-        let success: Option<()> =
+        let success: Result<(), String> =
             godot::private::handle_panic(err_context, || (test.function)(ctx));
 
-        CaseOutcome::from_bool(success.is_some())
+        CaseOutcome::from_bool(success.is_ok())
     }
 
     fn run_rust_benchmarks(&mut self, benchmarks: &mut GdBenchmarks) {
@@ -438,10 +438,10 @@ impl GdTestRunner {
         // Explicit type to prevent bench from returning a value
         let err_context = || format!("gdbench `{}` failed", bench.name);
 
-        let mut success: Option<()>;
+        let mut success: Result<(), String>;
         for _ in 0..crate::registry::bench::WARMUP_RUNS {
             success = godot::private::handle_panic(err_context, || (bench.function)(ctx));
-            if success.is_none() {
+            if success.is_err() {
                 return BenchResult::failed();
             }
         }
@@ -453,7 +453,7 @@ impl GdTestRunner {
             let start = Instant::now();
             success = godot::private::handle_panic(err_context, || (bench.function)(ctx));
             let duration = ctx.get_adjusted_duration(start);
-            if success.is_none() {
+            if success.is_err() {
                 return BenchResult::failed();
             }
             times.push(duration / inner_repetitions as u32);
