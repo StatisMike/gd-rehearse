@@ -61,6 +61,7 @@ pub trait CaseContext {
 }
 
 /// Case outcome.
+#[derive(PartialEq)]
 #[must_use]
 pub(crate) enum CaseOutcome {
     Passed,

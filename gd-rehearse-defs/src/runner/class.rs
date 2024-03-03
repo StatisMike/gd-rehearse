@@ -7,16 +7,17 @@
 use godot::obj::WithBaseField;
 use godot::prelude::{godot_api, Base, GString, GodotClass, INode, Node, PackedStringArray};
 
-use crate::cases::rust_bench::{BenchContext, RustBenchmark};
+use crate::cases::rust_bench::{BenchContext, BenchError, RustBenchmark};
 use crate::cases::rust_test_case::{RustTestCase, TestContext};
 use crate::cases::{Case, CaseOutcome, CaseType};
 
 use crate::registry::bench::{BenchResult, GdBenchmarks};
-use crate::registry::itest::GdRustItests;
+use crate::registry::itest::{GdRustItests, TestResult};
 use crate::registry::CaseFilterer;
 
 use super::config::RunnerConfig;
 use super::extract_file_subtitle;
+use super::panic::UnwindError;
 use super::print::MessageWriter;
 
 use std::time::{Duration, Instant};
@@ -353,24 +354,25 @@ impl GdTestRunner {
         while let Some(test) = handler.get_test() {
             writer.print_test_pre(test, &mut last_file);
 
-            let outcome = self.run_rust_test(&test, &ctx);
+            let result = self.run_rust_test(&test, &ctx);
             self.tests_summary
-                .update_stats(&test, &outcome, &mut self.failed_list);
-            writer.print_test_post(test.name, outcome);
+                .update_stats(&test, &result.outcome, &mut self.failed_list);
+            writer.print_test_post(test.name, result);
         }
     }
 
-    fn run_rust_test(&self, test: &RustTestCase, ctx: &TestContext) -> CaseOutcome {
+    fn run_rust_test(&self, test: &RustTestCase, ctx: &TestContext) -> TestResult {
         if !test.should_run_skip(self.config.disallow_skip()) {
-            return CaseOutcome::Skipped;
+            return TestResult::skipped();
         }
 
-        // Explicit type to prevent tests from returning a value
-        let err_context = || format!("gditest `{}` failed", test.name);
-        let success: Result<(), String> =
-            godot::private::handle_panic(err_context, || (test.function)(ctx));
+        let result = super::panic::handle_panic(|| (test.function)(ctx));
 
-        CaseOutcome::from_bool(success.is_ok())
+        if let Err(err) = result {
+            TestResult::failed(err)
+        } else {
+            TestResult::success()
+        }
     }
 
     fn run_rust_benchmarks(&mut self, benchmarks: &mut GdBenchmarks) {
@@ -388,39 +390,7 @@ impl GdTestRunner {
         while let Some(bench) = benchmarks.get_benchmark() {
             writer.print_bench_pre(&bench, &mut last_file);
 
-            match bench.execute_setup_function(ctx) {
-                Ok(setup_ctx) => ctx = setup_ctx,
-                Err(_) => {
-                    writer.println(&format!(
-                        "setup error in `{name}`: panic while executing function",
-                        name = bench.name
-                    ));
-                    self.benches_summary.update_stats(
-                        &bench,
-                        &CaseOutcome::Failed,
-                        &mut self.failed_list,
-                    );
-                    break;
-                }
-            }
-
             let result = self.run_rust_benchmark(&bench, &mut ctx);
-
-            match bench.execute_cleanup_function(ctx) {
-                Ok(cleanup_ctx) => ctx = cleanup_ctx,
-                Err(error) => {
-                    writer.println(&format!(
-                        "cleanup error in `{name}`: {error}",
-                        name = bench.name
-                    ));
-                    self.benches_summary.update_stats(
-                        &bench,
-                        &CaseOutcome::Failed,
-                        &mut self.failed_list,
-                    );
-                    break;
-                }
-            }
 
             self.benches_summary
                 .update_stats(&bench, &result.outcome, &mut self.failed_list);
@@ -433,16 +403,20 @@ impl GdTestRunner {
             return BenchResult::skipped();
         }
 
+        match bench.execute_setup_function(ctx.clone()) {
+            Ok(setup_ctx) => *ctx = setup_ctx,
+            Err(err) => {
+                return BenchResult::failed(BenchError::Setup(err));
+            }
+        }
+
         let inner_repetitions = bench.repetitions;
 
-        // Explicit type to prevent bench from returning a value
-        let err_context = || format!("gdbench `{}` failed", bench.name);
-
-        let mut success: Result<(), String>;
+        let mut success: Result<(), UnwindError>;
         for _ in 0..crate::registry::bench::WARMUP_RUNS {
-            success = godot::private::handle_panic(err_context, || (bench.function)(ctx));
-            if success.is_err() {
-                return BenchResult::failed();
+            success = super::panic::handle_panic(|| (bench.function)(ctx));
+            if let Err(err) = success {
+                return BenchResult::failed(BenchError::Execution(err));
             }
         }
 
@@ -451,14 +425,19 @@ impl GdTestRunner {
         let mut times = Vec::with_capacity(501);
         for _ in 0..crate::registry::bench::TEST_RUNS {
             let start = Instant::now();
-            success = godot::private::handle_panic(err_context, || (bench.function)(ctx));
+            success = super::panic::handle_panic(|| (bench.function)(ctx));
             let duration = ctx.get_adjusted_duration(start);
-            if success.is_err() {
-                return BenchResult::failed();
+            if let Err(err) = success {
+                return BenchResult::failed(BenchError::Execution(err));
             }
             times.push(duration / inner_repetitions as u32);
         }
         times.sort();
+
+        match bench.execute_cleanup_function(ctx.clone()) {
+            Ok(cleanup_ctx) => *ctx = cleanup_ctx,
+            Err(err) => return BenchResult::failed(BenchError::Cleanup(err)),
+        }
 
         BenchResult::success(times)
     }

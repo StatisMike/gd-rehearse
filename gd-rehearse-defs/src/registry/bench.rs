@@ -6,7 +6,7 @@
 
 use std::time::Duration;
 
-use crate::cases::rust_bench::RustBenchmark;
+use crate::cases::rust_bench::{BenchError, RustBenchmark};
 use crate::cases::CaseOutcome;
 
 use super::CaseFilterer;
@@ -80,6 +80,7 @@ impl GdBenchmarks {
 pub(crate) struct BenchResult {
     pub outcome: CaseOutcome,
     pub stats: [Duration; METRIC_COUNT],
+    pub error: Option<BenchError>,
 }
 
 impl BenchResult {
@@ -87,13 +88,15 @@ impl BenchResult {
         Self {
             outcome: CaseOutcome::Skipped,
             stats: [Duration::ZERO, Duration::ZERO],
+            error: None,
         }
     }
 
-    pub fn failed() -> Self {
+    pub fn failed(err: BenchError) -> Self {
         Self {
             outcome: CaseOutcome::Failed,
             stats: [Duration::ZERO, Duration::ZERO],
+            error: Some(err),
         }
     }
 
@@ -127,6 +130,7 @@ impl BenchResult {
         BenchResult {
             outcome: CaseOutcome::Passed,
             stats: [min, median],
+            error: None,
         }
     }
 }

@@ -2,10 +2,11 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
-*/
+ */
 
 use crate::cases::{Case, CaseOutcome};
 use crate::registry::bench::BenchResult;
+use crate::registry::itest::TestResult;
 use crate::runner::extract_file_subtitle;
 
 use super::config::{RunnerConfig, RunnerInfo};
@@ -138,24 +139,22 @@ impl MessageWriter {
         *last_file = Some(file.to_owned());
     }
 
-    pub fn print_test_post(&self, test_case: &str, outcome: CaseOutcome) {
+    pub fn print_test_post(&self, test_case: &str, result: TestResult) {
         if self.quiet {
             return;
         }
-        match (self.to_godot, &outcome) {
+        let outcome = if let Some(err) = result.error {
+            format!("{outcome}:\n{err}", outcome = result.outcome)
+        } else {
+            format!("{outcome}", outcome = result.outcome)
+        };
+
+        if self.to_godot {
             // For printing from godot, always print the whole line, as `print_test_pre` didn't print anything for the case.
-            (true, _) => {
-                self.println(&format!("   -- {test_case} ... {outcome}"));
-            }
-            // If to stdout, print the whole line only in case of error, as if test failed, something was printed (e.g. an assertion), so we can
-            // print the entire line again;
-            (false, CaseOutcome::Failed) => {
-                self.println(&format!("\n   -- {test_case} ... {outcome}"));
-            }
+            self.println(&format!("   -- {test_case} ... {outcome}"));
+        } else {
             // Otherwise just outcome on same line.
-            (false, _) => {
-                println!("{outcome}");
-            }
+            println!("{outcome}");
         }
     }
 
@@ -197,23 +196,22 @@ impl MessageWriter {
                 }
                 outcome
             }
+            CaseOutcome::Failed => {
+                format!(
+                    "    {outcome}:\n{err}",
+                    outcome = result.outcome,
+                    err = result.error.expect("couldn't unwrap error")
+                )
+            }
             _ => format!("    {}", result.outcome),
         };
 
-        match (self.to_godot, &result.outcome) {
+        if self.to_godot {
             // For printing from godot, always print the whole line, as `print_test_pre` didn't print anything for the case.
-            (true, _) => {
-                self.println(&format!("   -- {adjusted_name:<26} ...{outcome}"));
-            }
-            // If to stdout, print the whole line only in case of error, as if test failed, something was printed (e.g. an assertion), so we can
-            // print the entire line again;
-            (false, CaseOutcome::Failed) => {
-                self.println(&format!("\n   -- {adjusted_name:<26} ...{outcome}"));
-            }
+            self.println(&format!("   -- {adjusted_name:<26} ...{outcome}"));
+        } else {
             // Otherwise just outcome on same line.
-            (false, _) => {
-                println!("{outcome\n}");
-            }
+            println!("{outcome\n}");
         }
     }
 }
