@@ -4,7 +4,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-use crate::cases::rust_test_case::RustTestCase;
+use crate::{
+    cases::{rust_test_case::RustTestCase, CaseOutcome},
+    runner::panic::UnwindError,
+};
 
 use super::CaseFilterer;
 
@@ -68,6 +71,34 @@ impl GdRustItests {
     pub fn finish_setup(&mut self) {
         self.sort_cases();
         self.files_count = self.get_files_count()
+    }
+}
+
+pub(crate) struct TestResult {
+    pub(crate) outcome: CaseOutcome,
+    pub(crate) error: Option<UnwindError>,
+}
+
+impl TestResult {
+    pub fn success() -> Self {
+        Self {
+            outcome: CaseOutcome::Passed,
+            error: None,
+        }
+    }
+
+    pub fn skipped() -> Self {
+        Self {
+            outcome: CaseOutcome::Skipped,
+            error: None,
+        }
+    }
+
+    pub fn failed(err: UnwindError) -> Self {
+        Self {
+            outcome: CaseOutcome::Failed,
+            error: Some(err),
+        }
     }
 }
 

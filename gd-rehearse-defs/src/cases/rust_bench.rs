@@ -4,7 +4,6 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-use std::any::Any;
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::error::Error;
@@ -15,6 +14,8 @@ use std::time::{Duration, Instant};
 use godot::builtin::{GString, NodePath};
 use godot::engine::{Node, NodeExt};
 use godot::obj::{Gd, Inherits};
+
+use crate::runner::panic::{unwind_result, UnwindError, UnwindResult};
 
 use super::{Case, CaseContext};
 
@@ -65,14 +66,16 @@ impl RustBenchmark {
     pub(crate) fn execute_setup_function(
         &self,
         ctx: BenchContext,
-    ) -> Result<BenchContext, Box<dyn Any + Send>> {
+    ) -> Result<BenchContext, UnwindError> {
         if let Some(setup) = self.setup_function {
             let mut cloned_ctx = ctx.clone();
 
-            return std::panic::catch_unwind(move || {
+            let res: UnwindResult<BenchContext> = std::panic::catch_unwind(move || {
                 (setup)(&mut cloned_ctx);
                 Ok(cloned_ctx)
-            })?;
+            });
+
+            return unwind_result(res);
         }
         Ok(ctx)
     }
@@ -87,17 +90,24 @@ impl RustBenchmark {
         if let Some(cleanup) = self.cleanup_function {
             let mut cloned_ctx = ctx.clone();
 
-            let res: Result<Result<BenchContext, Box<dyn Any + Send>>, Box<dyn Any + Send>> =
-                std::panic::catch_unwind(move || {
-                    (cleanup)(&mut cloned_ctx);
-                    Ok(cloned_ctx)
+            let res: UnwindResult<BenchContext> = std::panic::catch_unwind(move || {
+                (cleanup)(&mut cloned_ctx);
+                Ok(cloned_ctx)
+            });
+
+            let res = unwind_result(res);
+            if let Err(err) = res {
+                return Err(CleanupError {
+                    not_cleaned: false,
+                    cause: Some(err),
                 });
-            if res.is_err() {
-                return Err(CleanupError { not_cleaned: false });
             }
-            if let Ok(ctx) = res.unwrap() {
+            if let Ok(ctx) = res {
                 if !ctx.added_nodes.is_empty() {
-                    return Err(CleanupError { not_cleaned: true });
+                    return Err(CleanupError {
+                        not_cleaned: true,
+                        cause: None,
+                    });
                 }
                 return Ok(ctx);
             }
@@ -268,21 +278,64 @@ impl BenchContext {
 }
 
 #[derive(Debug)]
+pub(crate) enum BenchError {
+    Setup(UnwindError),
+    Execution(UnwindError),
+    Cleanup(CleanupError),
+}
+
+impl Display for BenchError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            BenchError::Setup(err) => write!(f, "[setup] {err}"),
+            BenchError::Execution(err) => write!(f, "[execution] {err}"),
+            BenchError::Cleanup(err) => write!(f, "[cleanup] {err}"),
+        }
+    }
+}
+
+impl Error for BenchError {}
+
+#[derive(Debug)]
+pub(crate) struct SetupError {
+    cause: UnwindError,
+}
+
+impl Display for SetupError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.cause.fmt(f)
+    }
+}
+
+impl Error for SetupError {}
+
+#[derive(Debug)]
 pub(crate) struct CleanupError {
     not_cleaned: bool,
+    cause: Option<UnwindError>,
 }
 
 impl Display for CleanupError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if self.not_cleaned {
-            write!(f, "some setup nodes are still present. Call `BenchContext::remove_added_nodes()` in your cleanup function")
+            return write!(f, "some setup nodes are still present. Call `BenchContext::remove_added_nodes()` in your cleanup function");
+        }
+        if let Some(cause) = &self.cause {
+            write!(f, "{cause}")
         } else {
             write!(f, "panic during cleanup procedure")
         }
     }
 }
 
-impl Error for CleanupError {}
+impl Error for CleanupError {
+    fn cause(&self) -> Option<&dyn Error> {
+        if let Some(cause) = &self.cause {
+            return Some(cause);
+        }
+        None
+    }
+}
 
 #[doc(hidden)]
 /// Signal to the compiler that a value is used (to avoid optimization).
