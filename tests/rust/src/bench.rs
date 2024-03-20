@@ -1,3 +1,9 @@
+/*
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 use gd_rehearse::bench::*;
 use godot::engine::Node;
 use godot::engine::Object;
@@ -51,14 +57,14 @@ fn cleanup_function(ctx: &mut BenchContext) {
     ctx.remove_added_node("SetupTest");
 }
 
-#[gdbench(setup=setup_function)]
+#[gdbench(setup=setup_function, range = 0.05)]
 fn with_setup(ctx: &BenchContext) -> bool {
     let _setup = ctx.get_setup_node("SetupTest");
     let _child = ctx.get_node("SetupTest/SetupChild");
     true
 }
 
-#[gdbench(setup=setup_function, cleanup=cleanup_function)]
+#[gdbench(setup=setup_function, cleanup=cleanup_function, range = 0.02)]
 fn with_setup_and_cleanup(ctx: &BenchContext) -> bool {
     let _setup = ctx.get_setup_node("SetupTest");
     true

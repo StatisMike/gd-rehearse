@@ -7,10 +7,9 @@
 use crate::cases::{Case, CaseOutcome};
 use crate::registry::bench::BenchResult;
 use crate::registry::itest::TestResult;
-use crate::runner::extract_file_subtitle;
+use crate::utils::{extract_file_subtitle, is_headless_run};
 
 use super::config::{RunnerConfig, RunnerInfo};
-use super::is_headless_run;
 
 use godot::log::godot_print;
 
@@ -178,7 +177,7 @@ impl MessageWriter {
         print!("   -- {benchmark_name:<26} ...");
     }
 
-    pub fn print_bench_post(&self, benchmark: &str, result: BenchResult) {
+    pub fn print_bench_post(&self, benchmark: &str, result: &BenchResult) {
         if self.quiet {
             return;
         }
@@ -200,7 +199,7 @@ impl MessageWriter {
                 format!(
                     "    {outcome}:\n{err}",
                     outcome = result.outcome,
-                    err = result.error.expect("couldn't unwrap error")
+                    err = result.error.as_ref().expect("couldn't unwrap error")
                 )
             }
             _ => format!("    {}", result.outcome),

@@ -1,0 +1,6 @@
+[
+  { "name": "focused_bench [bench.rs]", "unit": "µs", "value": 0.021 },
+  { "name": "normal_bench [bench.rs]", "unit": "µs", "value": 0.013 },
+  { "name": "with_setup [bench.rs]", "unit": "µs", "value": 0.146, "range": "0.05" },
+  { "name": "with_setup_and_cleanup [bench.rs]", "unit": "µs", "value": 0.096, "range": "0.02" }
+]

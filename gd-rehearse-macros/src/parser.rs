@@ -2,7 +2,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
-*/
+ */
 
 use proc_macro2::{Ident, Literal, TokenTree};
 use std::collections::VecDeque;
@@ -21,6 +21,7 @@ pub enum AttributeIdent {
     ScenePath,
     Setup,
     Cleanup,
+    Range,
 }
 
 impl AttributeIdent {
@@ -33,6 +34,7 @@ impl AttributeIdent {
             "scene_path" => Some(Self::ScenePath),
             "setup" => Some(Self::Setup),
             "cleanup" => Some(Self::Cleanup),
+            "range" => Some(Self::Range),
             _ => None,
         }
     }
@@ -46,6 +48,7 @@ impl AttributeIdent {
             AttributeIdent::ScenePath => "scene_path".to_owned(),
             AttributeIdent::Setup => "setup".to_owned(),
             AttributeIdent::Cleanup => "cleanup".to_owned(),
+            AttributeIdent::Range => "range".to_owned(),
         }
     }
 

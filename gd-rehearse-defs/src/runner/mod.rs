@@ -4,31 +4,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-use godot::builtin::GString;
-
 pub(crate) mod class;
 pub mod config;
 pub(crate) mod panic;
 pub(crate) mod print;
 
 pub use class::GdTestRunner;
-
-pub(crate) fn is_headless_run() -> bool {
-    godot::engine::DisplayServer::singleton().get_name() == GString::from("headless")
-}
-
-pub(crate) fn is_godot_debug() -> bool {
-    godot::engine::Os::singleton().is_debug_build()
-}
-
-pub(crate) fn is_rust_debug() -> bool {
-    cfg!(debug_assertions)
-}
-
-pub(crate) fn extract_file_subtitle(file: &str) -> &str {
-    if let Some(sep_pos) = file.rfind(&['/', '\\']) {
-        &file[sep_pos + 1..]
-    } else {
-        file
-    }
-}

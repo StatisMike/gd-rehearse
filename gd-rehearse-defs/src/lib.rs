@@ -7,6 +7,7 @@
 pub mod cases;
 pub mod registry;
 pub mod runner;
+pub(crate) mod utils;
 
 pub mod paste {
     pub use paste::paste;

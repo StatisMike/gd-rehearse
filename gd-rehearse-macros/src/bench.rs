@@ -2,7 +2,7 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
-*/
+ */
 
 use crate::parser::{AttributeIdent, AttributeValueParser};
 use crate::utils::bail;
@@ -40,6 +40,7 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
     let mut scene_path = quote! { None };
     let mut setup_function: Option<Ident> = None;
     let mut cleanup_function: Option<Ident> = None;
+    let mut range = quote! { None };
 
     let mut parser =
         AttributeValueParser::from_attribute_group_at_path(&func.attributes, "gdbench")?;
@@ -52,6 +53,7 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
         AttributeIdent::ScenePath,
         AttributeIdent::Setup,
         AttributeIdent::Cleanup,
+        AttributeIdent::Range,
     ])? {
         match ident {
             AttributeIdent::Repeat => {
@@ -91,6 +93,12 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
             AttributeIdent::Cleanup => {
                 parser.pop_equal_sign()?;
                 cleanup_function = Some(parser.get_ident()?);
+                parser.progress_puct();
+            }
+            AttributeIdent::Range => {
+                parser.pop_equal_sign()?;
+                let range_lit = parser.get_literal()?;
+                range = quote! { Some( #range_lit ) };
                 parser.progress_puct();
             }
         }
@@ -169,7 +177,8 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
           repetitions: #repeats,
           scene_path: #scene_path,
           setup_function: #setup_function,
-          cleanup_function: #cleanup_function
+          cleanup_function: #cleanup_function,
+          range: #range
         }}
     })
 }

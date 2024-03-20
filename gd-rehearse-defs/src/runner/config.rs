@@ -4,7 +4,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-use super::{is_godot_debug, is_headless_run, is_rust_debug};
+use crate::{registry::bench::BenchOutput, utils::is_writable};
+use crate::utils::{is_godot_debug, is_headless_run, is_rust_debug};
+
 use core::fmt;
 use godot::builtin::{GString, PackedStringArray};
 
@@ -40,6 +42,7 @@ pub(crate) struct CliConfig {
     keyword: String,
     filters: Vec<String>,
     quiet_run: bool,
+    bench_action_output: Option<String>,
 }
 
 impl CliConfig {
@@ -56,6 +59,7 @@ impl CliConfig {
     pub const CMD_USER_FILTERS: &'static str = "--filters";
     pub const CMD_USER_ONLY_SCENE_PATH: &'static str = "--only-scene-path";
     pub const CMD_USER_QUIET_RUN: &'static str = "--quiet-run";
+    pub const CMD_USER_BENCHMARK_ACTION_OUTPUT: &'static str = "--bench-action-json";
 
     pub fn from_os() -> Result<Self, ConfigError> {
         let args = godot::engine::Os::singleton().get_cmdline_user_args();
@@ -115,6 +119,11 @@ impl CliConfig {
 
         let quiet_run = Self::get_arg(&mut args_vec, Self::CMD_USER_QUIET_RUN);
 
+        let bench_action_output =
+            Self::get_arg_with_value(&mut args_vec, Self::CMD_USER_BENCHMARK_ACTION_OUTPUT)
+                .get(0)
+                .cloned();
+
         let unrecognized_args = args_vec
             .iter()
             .map(|str| str.to_string())
@@ -135,6 +144,7 @@ impl CliConfig {
             keyword,
             filters,
             quiet_run,
+            bench_action_output,
         })
     }
 
@@ -207,6 +217,7 @@ pub(crate) struct RunnerConfig {
     scene_path: String,
     filters: Vec<String>,
     quiet_run: bool,
+    bench_output: BenchOutput,
 }
 
 impl RunnerConfig {
@@ -250,6 +261,10 @@ impl RunnerConfig {
         self.quiet_run
     }
 
+    pub fn bench_output(&self) -> &BenchOutput {
+        &self.bench_output
+    }
+
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         disallow_focus: bool,
@@ -281,6 +296,7 @@ impl RunnerConfig {
             scene_path,
             filters,
             quiet_run,
+            bench_output: BenchOutput::None,
         };
 
         if !is_headless_run() {
@@ -327,7 +343,22 @@ impl RunnerConfig {
             instance.quiet_run = true
         }
 
+        match Self::handle_outputs(cmdline.bench_action_output) {
+            Ok(output) => instance.bench_output = output,
+            Err(error) => return Err(ConfigError { message: error }),
+        };
+
         Ok(instance)
+    }
+
+    fn handle_outputs(bench_action_output: Option<String>) -> Result<BenchOutput, String> {
+        if let Some(file_path) = bench_action_output {
+            if !is_writable(&file_path) {
+                return Err(format!("cannot write to file at path: {file_path}"));
+            }
+            return Ok(BenchOutput::BenchmarkAction(file_path.to_string()));
+        }
+        Ok(BenchOutput::None)
     }
 }
 

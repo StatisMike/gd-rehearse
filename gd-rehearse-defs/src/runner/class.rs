@@ -2,8 +2,9 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
-*/
+ */
 
+use godot::log::godot_error;
 use godot::obj::WithBaseField;
 use godot::prelude::{godot_api, Base, GString, GodotClass, INode, Node, PackedStringArray};
 
@@ -11,12 +12,12 @@ use crate::cases::rust_bench::{BenchContext, BenchError, RustBenchmark};
 use crate::cases::rust_test_case::{RustTestCase, TestContext};
 use crate::cases::{Case, CaseOutcome, CaseType};
 
-use crate::registry::bench::{BenchResult, GdBenchmarks};
+use crate::registry::bench::{BenchOutput, BenchResult, BenchSummaryItem, GdBenchmarks};
 use crate::registry::itest::{GdRustItests, TestResult};
 use crate::registry::CaseFilterer;
+use crate::utils::extract_file_subtitle;
 
 use super::config::RunnerConfig;
-use super::extract_file_subtitle;
 use super::panic::UnwindError;
 use super::print::MessageWriter;
 
@@ -307,14 +308,14 @@ impl GdTestRunner {
         }
 
         // Run Rust Benchmarks.
-        if let (Some(mut handler), true) = (rust_bench_handler, rust_test_outcome) {
+        if let (Some(handler), true) = (&mut rust_bench_handler, rust_test_outcome) {
             writer.println("");
             writer.print_horizontal_separator();
             writer.println("   Running Rust benchmarks");
             writer.print_horizontal_separator();
 
             let clock = Instant::now();
-            self.run_rust_benchmarks(&mut handler);
+            self.run_rust_benchmarks(handler);
             let run_time = clock.elapsed();
 
             writer.println("");
@@ -329,6 +330,16 @@ impl GdTestRunner {
             writer.print_success()
         } else {
             writer.print_failure()
+        }
+
+        if let (BenchOutput::BenchmarkAction(path), Some(handler)) =
+            (self.config.bench_output(), &rust_bench_handler)
+        {
+            if let Err(error) =
+                BenchSummaryItem::write_benchmark_action_outputs(handler.results_summary(), path)
+            {
+                godot_error!("Error writing output: {error}");
+            }
         }
 
         self.end(!outcome as i32);
@@ -394,7 +405,9 @@ impl GdTestRunner {
 
             self.benches_summary
                 .update_stats(&bench, &result.outcome, &mut self.failed_list);
-            writer.print_bench_post(bench.get_case_name(), result);
+            writer.print_bench_post(bench.get_case_name(), &result);
+
+            benchmarks.push_result(BenchSummaryItem::new(&bench, result));
         }
     }
 
