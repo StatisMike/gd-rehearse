@@ -4,6 +4,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
+use godot::builtin::array;
+use godot::engine::file_access::ModeFlags;
+use godot::engine::GFile;
 use godot::obj::WithBaseField;
 use godot::prelude::{godot_api, Base, GString, GodotClass, INode, Node, PackedStringArray};
 
@@ -410,14 +413,27 @@ impl GdTestRunner {
             }
         }
 
+        let mut out_file = GFile::open(format!("res://bench_times_{}.csv", bench.get_case_name()), ModeFlags::WRITE).unwrap();
+        out_file.write_csv_line(PackedStringArray::from(&[
+            GString::from("duration"),
+            GString::from("mode")
+        ]), ",").unwrap();
+
         let inner_repetitions = bench.repetitions;
 
         let mut success: Result<(), UnwindError>;
+
         for _ in 0..crate::registry::bench::WARMUP_RUNS {
+            let start = Instant::now();
             success = super::panic::handle_panic(|| (bench.function)(ctx));
+            let duration = ctx.get_adjusted_duration(start);
             if let Err(err) = success {
                 return BenchResult::failed(BenchError::Execution(err));
             }
+            out_file.write_csv_line(PackedStringArray::from(&[
+                GString::from(format!("{}", (duration / inner_repetitions as u32).as_nanos())),
+                GString::from("warmup")
+            ]), ",").unwrap();
         }
 
         ctx.zero_duration();
@@ -430,6 +446,10 @@ impl GdTestRunner {
             if let Err(err) = success {
                 return BenchResult::failed(BenchError::Execution(err));
             }
+            out_file.write_csv_line(PackedStringArray::from(&[
+                GString::from(format!("{}", (duration / inner_repetitions as u32).as_nanos())),
+                GString::from("test")
+            ]), ",").unwrap();
             times.push(duration / inner_repetitions as u32);
         }
         times.sort();
