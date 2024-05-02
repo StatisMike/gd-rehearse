@@ -9,13 +9,13 @@ proc-macro = true
 
 [dev-dependencies]
 gd-rehearse = { path="../gd-rehearse" }
-godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
+godot = { git = "https://github.com/godot-rust/gdext", branch = "feature/output-dir" }
 
 [dependencies]
 gd-rehearse-defs = { path="../gd-rehearse-defs" }
-proc-macro2 = "1.0.63"
-quote = "1.0.29"
-venial = "0.5"
+proc-macro2 = "1.*"
+quote = "1.*"
+venial = "^0.5"
 
 [package.metadata.docs.rs]
 license-file = "../License.txt"

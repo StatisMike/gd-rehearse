@@ -12,7 +12,7 @@ use std::panic::RefUnwindSafe;
 use std::time::{Duration, Instant};
 
 use godot::builtin::{GString, NodePath};
-use godot::engine::{Node, NodeExt};
+use godot::engine::Node;
 use godot::obj::{Gd, Inherits};
 
 use crate::runner::panic::{unwind_result, UnwindError, UnwindResult};
@@ -160,7 +160,7 @@ impl CaseContext for BenchContext {
         let start = Instant::now();
         let out = self
             .scene_tree()
-            .get_node(path.into())
+            .get_node_or_null(path.into())
             .expect("cannot get node");
 
         *self.sub_durations.borrow_mut() += start.elapsed();
@@ -206,7 +206,7 @@ impl BenchContext {
     /// For usage in custom cleanup procedure, if you need to remove the nodes in specific order. All nodes need to be cleaned up during cleanup.
     pub fn remove_added_node(&mut self, name: impl Into<GString>) {
         let name: GString = name.into();
-        if let Some(mut node) = self.scene_tree.get_node(name.clone().into()) {
+        if let Some(mut node) = self.scene_tree.get_node_or_null(name.clone().into()) {
             node.queue_free();
             self.added_nodes.remove(&name);
         }
@@ -237,7 +237,7 @@ impl BenchContext {
         }
         let out = self
             .scene_tree
-            .get_node(gstring.into())
+            .get_node_or_null(gstring.into())
             .expect("cannot get setup node");
         *self.sub_durations.borrow_mut() += start.elapsed();
         out

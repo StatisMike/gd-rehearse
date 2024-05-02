@@ -60,7 +60,7 @@ fn shouldnt_run_path() {
 
 #[gditest(scene_path = "res://with_path.tscn")]
 fn access_ctx_with_path(ctx: &TestContext) {
-    let some_node = ctx.scene_tree().get_node("SomeNode".into());
+    let some_node = ctx.scene_tree().get_node_or_null("SomeNode".into());
     assert!(some_node.is_some());
 
     let value = some_node.unwrap().get("my_value".into());

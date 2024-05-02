@@ -11,7 +11,7 @@ pub mod rust_test_case;
 use std::cmp::Ordering;
 
 use godot::builtin::NodePath;
-use godot::engine::{Engine, Node, NodeExt};
+use godot::engine::{Engine, Node};
 use godot::obj::{Gd, Inherits};
 
 // /// Optional test context for `#[gditest]` and `#[gdbench]` annotated functions.
@@ -44,7 +44,7 @@ pub trait CaseContext {
     /// Panics if no node is present at the `path`.
     fn get_node(&self, path: impl Into<NodePath>) -> Gd<Node> {
         self.scene_tree()
-            .get_node(path.into())
+            .get_node_or_null(path.into())
             .expect("couldn't get node")
     }
 

@@ -9,7 +9,7 @@ crate-type = ["cdylib"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
+godot = { git = "https://github.com/godot-rust/gdext", branch = "feature/output-dir" }
 gd-rehearse = { path = "../../gd-rehearse" }
 
 [package.metadata.docs.rs]
