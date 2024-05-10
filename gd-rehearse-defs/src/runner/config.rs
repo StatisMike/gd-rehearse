@@ -309,7 +309,7 @@ impl RunnerConfig {
             instance.filters = Vec::new()
         };
         if !cmdline.filters.is_empty() {
-            instance.filters = cmdline.filters.clone()
+            instance.filters.clone_from(&cmdline.filters)
         };
         if cmdline.mute_keyword {
             instance.keyword = String::new()
@@ -318,7 +318,7 @@ impl RunnerConfig {
             instance.ignore_keywords = true;
         }
         if !cmdline.keyword.is_empty() {
-            instance.keyword = cmdline.keyword.clone()
+            instance.keyword.clone_from(&cmdline.keyword)
         };
         if cmdline.only_scene_path {
             instance.only_scene_path = true;
