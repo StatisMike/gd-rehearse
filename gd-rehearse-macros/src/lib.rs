@@ -59,7 +59,7 @@ mod utils;
 /// // Will only run in `res://special_cases.tscn` scene.
 /// #[gditest(scene_path="res://special_cases.tscn")]
 /// fn test_with_path(ctx: &TestContext) {
-///     let test_node = ctx.scene_tree().get_node("SomeTestNode".into());
+///     let test_node = ctx.scene_tree().get_node_or_null("SomeTestNode".into());
 ///     assert!(test_node.is_some());
 ///     assert!(!test_node.unwrap().get("property_should_be_here".into()).is_nil());
 /// }  
@@ -121,7 +121,7 @@ pub fn gditest(meta: TokenStream, input: TokenStream) -> TokenStream {
 /// // Will only run in `res://special_cases.tscn` scene.
 /// #[gdbench(scene_path="res://special_cases.tscn")]
 /// fn bench_with_path(ctx: &BenchContext) -> Variant {
-///     let test_node = ctx.scene_tree().get_node("SomeTestNode".into()).expect("Can't get node");
+///     let test_node = ctx.scene_tree().get_node_or_null("SomeTestNode".into()).expect("Can't get node");
 ///     let variant = test_node.get("property_should_be_here".into());
 ///     assert!(!variant.is_nil());
 ///     variant
