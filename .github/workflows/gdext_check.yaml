@@ -27,7 +27,7 @@ jobs:
     if: needs.gdext-check.outputs.changed == '0'
     uses: ./.github/workflows/reusable_tests.yaml
     with:
-      godot-version: 4.2
+      godot-version: 4.2.2
       release: false
 
   release-test:
@@ -35,7 +35,7 @@ jobs:
     if: needs.gdext-check.outputs.changed == '0'
     uses: ./.github/workflows/reusable_tests.yaml
     with:
-      godot-version: 4.2
+      godot-version: 4.2.2
       release: true
 
   gdext-compat-badge:
