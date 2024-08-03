@@ -1,7 +1,5 @@
 # gd-rehearse
-![Continuous tests](https://github.com/StatisMike/gd-rehearse/actions/workflows/tests.yaml/badge.svg)
-[![Latest compatible gdext](https://byob.yarr.is/StatisMike/gd-rehearse/gdext_latest_success)](https://github.com/godot-rust/gdext)
-
+![Tests](https://github.com/StatisMike/gd-rehearse/actions/workflows/tests.yaml/badge.svg)
 
 >In the vibrant production of game development, testing serves as the ongoing rehearsals where every line of code steps onto the stage. Just as actors grasping for fame polish their performances before the grand opening night, game makers of all calibers should fine-tune their creation, ensuring a flawless gameplay experience when the curtain rises on the final release.
 

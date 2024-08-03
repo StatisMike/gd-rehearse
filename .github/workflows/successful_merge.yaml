@@ -6,14 +6,6 @@ on:
       - master
 
 jobs:
-  gdext_sha: 
-    uses: ./.github/workflows/reusable_gdext_sha.yaml
-
-  gdext_badge:
-    uses: ./.github/workflows/reusable_gdext_badge.yaml
-    needs: gdext_sha
-    with: 
-      gdext_sha: ${{ needs.gdext_sha.outputs.sha }}
 
   doc:
     name: Deploy documentation on Github Pages
