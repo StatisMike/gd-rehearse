@@ -14,11 +14,11 @@ pub(crate) mod print;
 pub use class::GdTestRunner;
 
 pub(crate) fn is_headless_run() -> bool {
-    godot::engine::DisplayServer::singleton().get_name() == GString::from("headless")
+    godot::classes::DisplayServer::singleton().get_name() == GString::from("headless")
 }
 
 pub(crate) fn is_godot_debug() -> bool {
-    godot::engine::Os::singleton().is_debug_build()
+    godot::classes::Os::singleton().is_debug_build()
 }
 
 pub(crate) fn is_rust_debug() -> bool {
@@ -26,7 +26,7 @@ pub(crate) fn is_rust_debug() -> bool {
 }
 
 pub(crate) fn extract_file_subtitle(file: &str) -> &str {
-    if let Some(sep_pos) = file.rfind(&['/', '\\']) {
+    if let Some(sep_pos) = file.rfind(['/', '\\']) {
         &file[sep_pos + 1..]
     } else {
         file

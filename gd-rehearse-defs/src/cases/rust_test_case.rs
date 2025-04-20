@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
 */
 
-use godot::engine::Node;
+use godot::classes::Node;
 use godot::obj::Gd;
 
 use super::{Case, CaseContext};

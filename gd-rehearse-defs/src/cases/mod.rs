@@ -11,7 +11,8 @@ pub mod rust_test_case;
 use std::cmp::Ordering;
 
 use godot::builtin::NodePath;
-use godot::engine::{Engine, Node};
+use godot::classes::{Engine, Node};
+use godot::meta::AsArg;
 use godot::obj::{Gd, Inherits};
 
 // /// Optional test context for `#[gditest]` and `#[gdbench]` annotated functions.
@@ -42,9 +43,9 @@ pub trait CaseContext {
     /// # Panics
     ///
     /// Panics if no node is present at the `path`.
-    fn get_node(&self, path: impl Into<NodePath>) -> Gd<Node> {
+    fn get_node(&self, path: impl AsArg<NodePath>) -> Gd<Node> {
         self.scene_tree()
-            .get_node_or_null(path.into())
+            .get_node_or_null(path)
             .expect("couldn't get node")
     }
 
@@ -53,9 +54,9 @@ pub trait CaseContext {
     /// # Panics
     ///
     /// Panics if no node is present at the `path`, or cannot be casted to `T`.
-    fn get_node_as<T: Inherits<Node>>(&self, path: impl Into<NodePath>) -> Gd<T> {
+    fn get_node_as<T: Inherits<Node>>(&self, path: impl AsArg<NodePath>) -> Gd<T> {
         self.scene_tree()
-            .try_get_node_as(path.into())
+            .try_get_node_as(path)
             .expect("couldn't get node as")
     }
 }

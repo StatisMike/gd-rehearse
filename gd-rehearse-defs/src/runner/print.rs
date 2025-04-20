@@ -4,6 +4,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+use godot::global::godot_print;
+
 use crate::cases::{Case, CaseOutcome};
 use crate::registry::bench::BenchResult;
 use crate::registry::itest::TestResult;
@@ -11,8 +13,6 @@ use crate::runner::extract_file_subtitle;
 
 use super::config::{RunnerConfig, RunnerInfo};
 use super::is_headless_run;
-
-use godot::log::godot_print;
 
 pub(crate) struct MessageWriter {
     to_godot: bool,
@@ -123,7 +123,7 @@ impl MessageWriter {
         // Check if we need to open a new category for a file.
         let is_new_file = last_file
             .as_ref()
-            .map_or(true, |last_file| last_file != file);
+            .is_none_or(|last_file| last_file != file);
 
         if !is_new_file {
             return;

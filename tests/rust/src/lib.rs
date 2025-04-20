@@ -11,5 +11,5 @@ mod itest;
 
 struct GodotTestTests;
 
-#[gdextension(entry_point=tests_init)]
+#[gdextension(entry_symbol=tests_init)]
 unsafe impl ExtensionLibrary for GodotTestTests {}
