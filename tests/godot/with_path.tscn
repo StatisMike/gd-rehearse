@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://cqxmvuq3n3y07"]
+
+[ext_resource type="Script" uid="uid://csowfaja3lk7f" path="res://SomeNode.gd" id="1_p6q1m"]
+
+[node name="GdTestRunner" type="GdTestRunner"]
+disallow_focus = true
+only_scene_path = true
+
+[node name="SomeNode" type="Node" parent="."]
+script = ExtResource("1_p6q1m")

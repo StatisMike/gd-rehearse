@@ -1,6 +1,6 @@
 use gd_rehearse::bench::*;
-use godot::engine::Node;
-use godot::engine::Object;
+use godot::classes::Node;
+use godot::classes::Object;
 use godot::obj::Gd;
 use godot::obj::InstanceId;
 use godot::obj::NewAlloc;
@@ -27,8 +27,10 @@ fn bench_with_ctx(ctx: &BenchContext) -> InstanceId {
 }
 
 #[gdbench(scene_path = "res://with_path.tscn")]
-fn path_bench() -> i32 {
-    324
+fn path_bench(ctx: &BenchContext) -> i32 {
+    let some_node = ctx.scene_tree().get_node_or_null("SomeNode").unwrap();
+    let value = some_node.get("my_value");
+    value.to::<i32>() + 321_i32
 }
 
 #[gdbench(scene_path = "res://nonexistent.tscn")]
@@ -41,8 +43,8 @@ fn shouldnt_run_path() -> i8 {
 fn setup_function(ctx: &mut BenchContext) {
     let mut node = Node::new_alloc();
     let mut child = Node::new_alloc();
-    child.set_name("SetupChild".into());
-    node.add_child(child);
+    child.set_name("SetupChild");
+    node.add_child(&child);
 
     ctx.setup_add_node(node, "SetupTest");
 }

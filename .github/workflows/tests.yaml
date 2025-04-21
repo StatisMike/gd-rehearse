@@ -31,7 +31,8 @@ jobs:
     needs: rust-test
     uses: ./.github/workflows/reusable_tests.yaml
     with:
-      godot-version: 4.2.2
+      godot-version: 4.4.1-stable
+      godot-version-templates-path: 4.4.1.stable
       release: false
 
   release-test:
@@ -40,6 +41,7 @@ jobs:
     if: github.base_ref == 'master' || github.ref_name == 'master'
     uses: ./.github/workflows/reusable_tests.yaml
     with:
-      godot-version: 4.2.2
+      godot-version: 4.4.1-stable
+      godot-version-templates-path: 4.4.1.stable
       release: true
 

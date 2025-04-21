@@ -18,7 +18,6 @@ pub(crate) struct GdRustItests {
     tests: Vec<RustTestCase>,
     files_count: usize,
     is_focus_run: bool,
-    is_path_run: bool,
 }
 
 impl GdRustItests {
@@ -39,7 +38,6 @@ impl GdRustItests {
             tests: Vec::new(),
             files_count: 0,
             is_focus_run: false,
-            is_path_run: false,
         };
 
         instance.collect_rust_tests();
@@ -103,12 +101,6 @@ impl TestResult {
 }
 
 impl CaseFilterer<RustTestCase> for GdRustItests {
-    fn is_path_run(&self) -> bool {
-        self.is_path_run
-    }
-    fn set_path_run(&mut self, is_path_run: bool) {
-        self.is_path_run = is_path_run
-    }
     fn is_focus_run(&self) -> bool {
         self.is_focus_run
     }

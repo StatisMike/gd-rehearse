@@ -12,7 +12,8 @@ use std::panic::RefUnwindSafe;
 use std::time::{Duration, Instant};
 
 use godot::builtin::{GString, NodePath};
-use godot::engine::Node;
+use godot::classes::Node;
+use godot::meta::AsArg;
 use godot::obj::{Gd, Inherits};
 
 use crate::runner::panic::{unwind_result, UnwindError, UnwindResult};
@@ -156,22 +157,22 @@ impl CaseContext for BenchContext {
         &self.scene_tree
     }
 
-    fn get_node(&self, path: impl Into<NodePath>) -> Gd<Node> {
+    fn get_node(&self, path: impl AsArg<NodePath>) -> Gd<Node> {
         let start = Instant::now();
         let out = self
             .scene_tree()
-            .get_node_or_null(path.into())
+            .get_node_or_null(path)
             .expect("cannot get node");
 
         *self.sub_durations.borrow_mut() += start.elapsed();
         out
     }
 
-    fn get_node_as<T: Inherits<Node>>(&self, path: impl Into<NodePath>) -> Gd<T> {
+    fn get_node_as<T: Inherits<Node>>(&self, path: impl AsArg<NodePath>) -> Gd<T> {
         let start = Instant::now();
         let out = self
             .scene_tree()
-            .try_get_node_as(path.into())
+            .try_get_node_as(path)
             .expect("cannot get node as");
 
         *self.sub_durations.borrow_mut() += start.elapsed();
@@ -195,7 +196,7 @@ impl BenchContext {
     /// This method is called during default cleanup procedure, and needs to be called also when implementing some custom cleanup is required.
     pub fn remove_all_added_nodes(&mut self) {
         for node_path in self.added_nodes.drain() {
-            if let Some(mut node) = self.scene_tree.get_node_or_null(node_path.into()) {
+            if let Some(mut node) = self.scene_tree.get_node_or_null(node_path.arg()) {
                 node.queue_free()
             }
         }
@@ -206,7 +207,7 @@ impl BenchContext {
     /// For usage in custom cleanup procedure, if you need to remove the nodes in specific order. All nodes need to be cleaned up during cleanup.
     pub fn remove_added_node(&mut self, name: impl Into<GString>) {
         let name: GString = name.into();
-        if let Some(mut node) = self.scene_tree.get_node_or_null(name.clone().into()) {
+        if let Some(mut node) = self.scene_tree.get_node_or_null(name.arg()) {
             node.queue_free();
             self.added_nodes.remove(&name);
         }
@@ -219,8 +220,8 @@ impl BenchContext {
     pub fn setup_add_node(&mut self, node: Gd<Node>, name: impl Into<GString>) {
         let name = name.into();
         let mut node = node.clone();
-        node.set_name(name.clone());
-        self.scene_tree.add_child(node);
+        node.set_name(&name);
+        self.scene_tree.add_child(&node);
         self.added_nodes.insert(name);
     }
 
@@ -237,7 +238,7 @@ impl BenchContext {
         }
         let out = self
             .scene_tree
-            .get_node_or_null(gstring.into())
+            .get_node_or_null(gstring.arg())
             .expect("cannot get setup node");
         *self.sub_durations.borrow_mut() += start.elapsed();
         out
@@ -256,7 +257,7 @@ impl BenchContext {
         }
         let out = self
             .scene_tree
-            .try_get_node_as(gstring)
+            .try_get_node_as(gstring.arg())
             .expect("cannot get setup node as");
         *self.sub_durations.borrow_mut() += start.elapsed();
         out
@@ -295,19 +296,6 @@ impl Display for BenchError {
 }
 
 impl Error for BenchError {}
-
-#[derive(Debug)]
-pub(crate) struct SetupError {
-    cause: UnwindError,
-}
-
-impl Display for SetupError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.cause.fmt(f)
-    }
-}
-
-impl Error for SetupError {}
 
 #[derive(Debug)]
 pub(crate) struct CleanupError {

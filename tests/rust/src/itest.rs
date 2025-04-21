@@ -5,7 +5,7 @@
 */
 
 use gd_rehearse::itest::*;
-use godot::engine::Object;
+use godot::classes::Object;
 use godot::obj::Gd;
 
 #[gditest]
@@ -44,6 +44,14 @@ fn filter_me() {}
 #[gditest]
 fn filter_me_too() {}
 
+#[gditest]
+fn only_main_scene(ctx: &TestContext) {
+    assert_eq!(
+        ctx.scene_tree().get_scene_file_path().to_string(),
+        "res://test.tscn"
+    )
+}
+
 #[gditest(scene_path = "res://with_path.tscn")]
 fn with_test_path(ctx: &TestContext) {
     assert_eq!(
@@ -60,10 +68,9 @@ fn shouldnt_run_path() {
 
 #[gditest(scene_path = "res://with_path.tscn")]
 fn access_ctx_with_path(ctx: &TestContext) {
-    let some_node = ctx.scene_tree().get_node_or_null("SomeNode".into());
-    assert!(some_node.is_some());
+    let some_node = ctx.get_node("SomeNode");
 
-    let value = some_node.unwrap().get("my_value".into());
+    let value = some_node.get("my_value");
     assert!(!value.is_nil());
     let val_as_int = value.to::<i32>();
     assert_eq!(val_as_int, 344);

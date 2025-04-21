@@ -6,6 +6,9 @@ on:
       godot-version:
         required: true
         type: string
+      godot-version-templates-path:
+        required: true
+        type: string
       release:
         default: false
         type: boolean
@@ -15,9 +18,9 @@ jobs:
     name: Tests
     runs-on: ubuntu-22.04
     env: 
-      GODOT_BASE_URL: http://downloads.tuxfamily.org/godotengine/${{ inputs.godot-version }}
-      GODOT_BINARY: Godot_v${{ inputs.godot-version }}-stable_linux.x86_64
-      GODOT_EXPORT_TEMPLATES: Godot_v${{ inputs.godot-version }}-stable_export_templates.tpz
+      GODOT_BASE_URL: https://github.com/godotengine/godot-builds/releases/download/${{ inputs.godot-version }}
+      GODOT_BINARY: Godot_v${{ inputs.godot-version }}_linux.x86_64
+      GODOT_EXPORT_TEMPLATES: Godot_v${{ inputs.godot-version }}_export_templates.tpz
       GODOT4_BIN: ""
 
     steps:
@@ -39,7 +42,7 @@ jobs:
         shell: bash
         run: |
           mkdir godot_bin_cache && cd godot_bin_cache
-          curl $GODOT_BASE_URL/$GODOT_BINARY.zip >> godot.zip
+          curl -fL -o godot.zip $GODOT_BASE_URL/$GODOT_BINARY.zip
           unzip godot.zip && rm godot.zip && chmod +x $GODOT_BINARY 
           echo "GODOT4_BIN=$(readlink -f $GODOT_BINARY)" >> $GITHUB_ENV
 
@@ -73,6 +76,11 @@ jobs:
         shell: bash
         run: ${{ env.GODOT4_BIN }} --headless --path tests/godot
 
+      - name: Run Godot integration tests (dev) with scene path
+        if: inputs.release == false
+        shell: bash
+        run: ${{ env.GODOT4_BIN }} --headless --path tests/godot res://with_path.tscn
+
       - name: Godot export templates cache
         id: cache-godot-tmpl
         uses: actions/cache@v4
@@ -85,14 +93,14 @@ jobs:
         shell: bash
         run: |
           mkdir godot_templates_cache && cd godot_templates_cache
-          curl $GODOT_BASE_URL/$GODOT_EXPORT_TEMPLATES >> godot_tmpl.tpz
+          curl -fL -o godot_tmpl.tpz $GODOT_BASE_URL/$GODOT_EXPORT_TEMPLATES
 
       - name: Unzip Export templates
         shell: bash
         run: |
           /usr/bin/unzip ./godot_templates_cache/godot_tmpl.tpz -d /home/runner/.local/share/godot
-          /usr/bin/mkdir -p /home/runner/.local/share/godot/export_templates/${{ inputs.godot-version }}.stable
-          /usr/bin/mv /home/runner/.local/share/godot/templates/* -t /home/runner/.local/share/godot/export_templates/${{ inputs.godot-version }}.stable
+          /usr/bin/mkdir -p /home/runner/.local/share/godot/export_templates/${{ inputs.godot-version-templates-path }}
+          /usr/bin/mv /home/runner/.local/share/godot/templates/* -t /home/runner/.local/share/godot/export_templates/${{ inputs.godot-version-templates-path }}
 
       - name: Export godot project (debug)
         if: inputs.release != true
@@ -111,3 +119,8 @@ jobs:
       - name: Run Godot integration tests (export)
         shell: bash
         run: /home/runner/.local/share/godot/builds/LinuxHeadless/test_headless.x86_64
+
+      - name: Run Godot integration tests (export) with path
+        shell: bash
+        run: /home/runner/.local/share/godot/builds/LinuxHeadless/test_headless.x86_64 res://with_path.tscn
+

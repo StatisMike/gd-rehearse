@@ -58,7 +58,7 @@ impl CliConfig {
     pub const CMD_USER_QUIET_RUN: &'static str = "--quiet-run";
 
     pub fn from_os() -> Result<Self, ConfigError> {
-        let args = godot::engine::Os::singleton().get_cmdline_user_args();
+        let args = godot::classes::Os::singleton().get_cmdline_user_args();
         let mut args_vec = args.as_slice().iter().collect::<Vec<_>>();
 
         let run_rust_tests = Self::get_arg(&mut args_vec, Self::CMD_USER_RUST_TESTS);

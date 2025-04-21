@@ -1,13 +1,13 @@
 [package]
 name = "gd-rehearse-defs"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "MPL-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-godot = { version = "0.1.*" }
+godot = { version = "^0.2.4" }
 paste = { version = "^1.0.14" }
 
 [dev-dependencies]

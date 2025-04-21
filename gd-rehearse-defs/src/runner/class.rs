@@ -127,15 +127,15 @@ impl RunnerSummary {
 ///
 /// - `run_tests`: If set, functions annotated with `#[gditest]` will be executed. Defaults to `true`.
 /// - `run_benchmarks`: If set, functions annotated with `#[gdbench]` will be executed. Defaults to `true`. If `run_tests` is also `true`, benchmarks
-///    will only be executed if all tests pass successfully.
+///   will only be executed if all tests pass successfully.
 /// - `test_keyword`: If set, only tests and benchmarks with the same `keyword` specified will be executed. Defaults to an empty string, meaning
-///    that only tests and benchmarks without a `keyword` set will be executed. It takes precedence over `focus` and `filters`—they will be
-///    assessed, but only in the context of this `keyword`.
+///   that only tests and benchmarks without a `keyword` set will be executed. It takes precedence over `focus` and `filters`—they will be
+///   assessed, but only in the context of this `keyword`.
 /// - `ignore_keywords`: If set, all tests and benchmarks will be executed regardless of their set `keyword`.
 /// - `disallow_focus`: If set, the `focus` attribute of tests and benchmarks will be ignored.
 /// - `disallow_skip`: If set, the `skip` attribute of tests and benchmarks will be ignored.
 /// - `test_filters`: An array of strings tested against the names of tests and benchmarks. Those with names containing at least one of the specified
-///    filters will be executed.
+///   filters will be executed.
 /// - `only_scene_path`: If `true`, runner will execute only tests for its scene path specified in their `scene_path` attribute.
 ///
 /// ## Command Line Arguments
@@ -205,7 +205,7 @@ impl INode for GdTestRunner {
     // Needed for the physics to be initialized for the tests that needs them
     fn ready(&mut self) {
         let mut scene_tree = self.base().get_tree().unwrap();
-        scene_tree.connect("physics_frame".into(), self.base().callable("test_run"));
+        scene_tree.connect("physics_frame", &self.base().callable("test_run"));
     }
 }
 

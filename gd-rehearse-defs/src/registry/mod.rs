@@ -15,8 +15,6 @@ pub(crate) trait CaseFilterer<T>
 where
     T: Case,
 {
-    fn is_path_run(&self) -> bool;
-    fn set_path_run(&mut self, is_path_run: bool);
     fn is_focus_run(&self) -> bool;
     fn set_focus_run(&mut self, is_focus_run: bool);
     fn get_cases(&self) -> &Vec<T>;
@@ -57,9 +55,5 @@ where
             set.insert(case.get_case_file().to_owned());
         }
         set.len()
-    }
-
-    fn is_any_path_eq(&self, path: &str) -> bool {
-        self.get_cases().iter().any(|c| c.scene_path_eq(path))
     }
 }

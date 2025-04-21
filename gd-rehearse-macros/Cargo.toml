@@ -1,6 +1,6 @@
 [package]
 name = "gd-rehearse-macros"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "MPL-2.0"
 
@@ -9,7 +9,7 @@ proc-macro = true
 
 [dev-dependencies]
 gd-rehearse = { path="../gd-rehearse" }
-godot = { version = "0.1.*" }
+godot = { version = "^0.2.4" }
 
 [dependencies]
 gd-rehearse-defs = { path="../gd-rehearse-defs" }
