@@ -7,7 +7,7 @@ license = "MPL-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-godot = { version = "^0.2.4" }
+godot = { version = "^0.3.1" }
 paste = { version = "^1.0.14" }
 
 [dev-dependencies]
@@ -15,3 +15,4 @@ gd-rehearse = { path = "../gd-rehearse" }
 
 [package.metadata.docs.rs]
 license-file = "../License.txt"
+

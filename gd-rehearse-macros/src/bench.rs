@@ -158,7 +158,7 @@ pub fn attribute_bench(input_decl: Declaration) -> Result<TokenStream, venial::E
             }
         }
 
-        ::godot::sys::plugin_add!{GD_REHEARSE_RUST_BENCHMARKS in gd_rehearse::bench; ::gd_rehearse::bench::RustBenchmark {
+        ::godot::sys::plugin_add!{GD_REHEARSE_RUST_BENCHMARKS; ::gd_rehearse::bench::RustBenchmark {
           name: #bench_name_str,
           focused: #focused,
           skipped: #skipped,

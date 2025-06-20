@@ -8,14 +8,15 @@ license = "MPL-2.0"
 proc-macro = true
 
 [dev-dependencies]
-gd-rehearse = { path="../gd-rehearse" }
-godot = { version = "^0.2.4" }
+gd-rehearse = { path = "../gd-rehearse" }
+godot = { version = "^0.3.1" }
 
 [dependencies]
-gd-rehearse-defs = { path="../gd-rehearse-defs" }
+gd-rehearse-defs = { path = "../gd-rehearse-defs" }
 proc-macro2 = "^1.0.63"
 quote = "^1.0.29"
 venial = "^0.5"
 
 [package.metadata.docs.rs]
 license-file = "../License.txt"
+
