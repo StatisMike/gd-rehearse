@@ -54,7 +54,7 @@ impl GdRustItests {
     }
 
     fn get_rust_case() -> Option<RustTestCase> {
-        __godot_rust_plugin_GD_REHEARSE_RUST_TEST_CASES
+        GD_REHEARSE_RUST_TEST_CASES
             .lock()
             .expect("can't retrieve RustTestCase")
             .pop()
