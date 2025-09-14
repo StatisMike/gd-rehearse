@@ -9,8 +9,6 @@ and integration testing as well as benchmarking.
 
 When using the standard `#[test]` Rust macro in a gdextension project, tests will fail if they involve objects that require the Godot executable to run. `gd-rehearse` provides a suitable testing stage by introducing the `#[gditest]` and `#[gdbench]` macros. These can be used to annotate functions intended for testing or benchmarking your code, and the crate provides the GdTestRunner for executing them within a created Godot test scene.
 
-> Current branch is kept in sync with `godot-rust/gdext` master branch.
-
 ## In Development
 
 ⚠️ **This crate is not production-ready.**
