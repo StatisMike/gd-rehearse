@@ -12,7 +12,7 @@ categories = ["game-engines", "graphics", "test"]
 gd-rehearse-macros = { path = "../gd-rehearse-macros"}
 gd-rehearse-defs = { path = "../gd-rehearse-defs"}
 # For direct link in documentation
-godot = { git = "https://github.com/godot-rust/gdext", branch = "master" }
+godot = { workspace = true }
 
 [package.metadata.docs.rs]
 license-file = "../License.txt"

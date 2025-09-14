@@ -1,6 +1,6 @@
 # gd-rehearse
 ![Tests](https://github.com/StatisMike/gd-rehearse/actions/workflows/tests.yaml/badge.svg)
-![godot-rust v0.2.4](https://img.shields.io/badge/godot--rust-v0.2.4-blue?style=plastic)
+![godot-rust v0.3.5](https://img.shields.io/badge/godot--rust-v0.3.5-blue?style=plastic)
 
 >In the vibrant production of game development, testing serves as the ongoing rehearsals where every line of code steps onto the stage. Just as actors grasping for fame polish their performances before the grand opening night, game makers of all calibers should fine-tune their creation, ensuring a flawless gameplay experience when the curtain rises on the final release.
 
