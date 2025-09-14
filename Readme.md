@@ -1,6 +1,6 @@
 # gd-rehearse
 ![Tests](https://github.com/StatisMike/gd-rehearse/actions/workflows/tests.yaml/badge.svg)
-![godot-rust v0.2.4](https://img.shields.io/badge/godot--rust-v0.2.4-blue?style=plastic)
+![godot-rust v0.3.5](https://img.shields.io/badge/godot--rust-v0.3.5-blue?style=plastic)
 
 >In the vibrant production of game development, testing serves as the ongoing rehearsals where every line of code steps onto the stage. Just as actors grasping for fame polish their performances before the grand opening night, game makers of all calibers should fine-tune their creation, ensuring a flawless gameplay experience when the curtain rises on the final release.
 
@@ -8,6 +8,8 @@ This crate enhances the testing capabilities of [godot-rust](https://github.com/
 and integration testing as well as benchmarking.
 
 When using the standard `#[test]` Rust macro in a gdextension project, tests will fail if they involve objects that require the Godot executable to run. `gd-rehearse` provides a suitable testing stage by introducing the `#[gditest]` and `#[gdbench]` macros. These can be used to annotate functions intended for testing or benchmarking your code, and the crate provides the GdTestRunner for executing them within a created Godot test scene.
+
+> Current branch is kept in sync with `godot-rust/gdext` master branch.
 
 ## In Development
 

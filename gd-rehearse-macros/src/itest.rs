@@ -103,7 +103,7 @@ pub fn attribute_gditest(input_decl: Declaration) -> Result<TokenStream, Error> 
             #body
         }
 
-        ::godot::sys::plugin_add!(GD_REHEARSE_RUST_TEST_CASES in gd_rehearse::itest; ::gd_rehearse::itest::RustTestCase {
+        ::godot::sys::plugin_add!(gd_rehearse::itest::GD_REHEARSE_RUST_TEST_CASES; gd_rehearse::itest::RustTestCase {
             name: #test_name_str,
             skipped: #skipped,
             focused: #focused,

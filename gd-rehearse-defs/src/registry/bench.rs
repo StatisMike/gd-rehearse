@@ -57,7 +57,7 @@ impl GdBenchmarks {
     }
 
     fn get_benchmark_from_registry() -> Option<RustBenchmark> {
-        __godot_rust_plugin_GD_REHEARSE_RUST_BENCHMARKS
+        GD_REHEARSE_RUST_BENCHMARKS
             .lock()
             .expect("couldn't retrieve RustBenchmark")
             .pop()
